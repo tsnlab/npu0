@@ -88,8 +88,15 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
       // TODO: Implement Read Address configuration
+      // Set up dummy value for master
+      axi_arburst := 1.U // MODE INCR
+      axi_arlen := 0.U // Only fetch one time
+      axi_arid := 1.U // TODO: FIXME: Find out right ID for this
+      axi_arsize := 2.U // TODO: Read the manual and find out
+
       // Sets up ARVALID
       axi_arvalid := 1.B
+      //
       // Transit to next state
       axiReadState := AXI4ReadState.ARREADY
     }
@@ -102,6 +109,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     }
 
     is (AXI4ReadState.RVALID) {
+      // TODO: Check ARID match
       when (M_AXI.rvalid) {
         axi_rready := 1.B
         axiReadState := AXI4ReadState.RREADY
@@ -109,33 +117,47 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     }
 
     is (AXI4ReadState.RREADY) {
+      // TODO: Implement burst counter properly
+      axi_rready := 0.B
       axiReadState := AXI4ReadState.ARVALID
     }
   }
 
   switch (axiWriteState) {
     is (AXI4WriteState.AWVALID) {
-      //
+      axi_awvalid := 1.B
+      axiWriteState := AXI4WriteState.AWREADY
     }
 
     is (AXI4WriteState.AWREADY) {
-      //
+      when (M_AXI.awready) {
+        axi_awvalid := 0.B
+        axiWriteState := AXI4WriteState.WVALID
+      }
     }
 
     is (AXI4WriteState.WVALID) {
-      //
+      axi_wvalid := 1.B
     }
 
     is (AXI4WriteState.WREADY) {
-      //
+      // TODO: Implement burst counter properly
+      when (M_AXI.wready) {
+        axi_wvalid := 0.B
+        axiWriteState := AXI4WriteState.BVALID
+      }
     }
 
     is (AXI4WriteState.BVALID) {
-      //
+      when (M_AXI.bvalid) {
+        axi_bready := 1.B
+        axiWriteState := AXI4WriteState.BREADY
+      }
     }
 
     is (AXI4WriteState.BREADY) {
-      //
+      axi_bready := 0.B
+      axiWriteState := AXI4WriteState.AWVALID
     }
   }
 }
