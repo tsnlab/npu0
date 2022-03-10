@@ -20,15 +20,15 @@ object VerilogEmitter extends App {
 
   // Emit the verilog
   val chiselOpts = Array("-td", "vout")
-  (new ChiselStage).emitVerilog(new M_AXI_HP(axiparam), chiselOpts)
-  (new ChiselStage).emitVerilog(new S_AXI_GP(axiparam), chiselOpts)
+  (new ChiselStage).emitVerilog(new M_AXI(axiparam), chiselOpts)
+  (new ChiselStage).emitVerilog(new S_AXI(axiparam), chiselOpts)
 
   // generate graph files for circuit visualization
   val elkOpts = Array("-td", "vout", "--lowFir")
   (new layered.stage.ElkStage).execute(elkOpts,
-    Seq(ChiselGeneratorAnnotation(() => new M_AXI_HP(axiparam)))
+    Seq(ChiselGeneratorAnnotation(() => new M_AXI(axiparam)))
   )
   (new layered.stage.ElkStage).execute(elkOpts,
-    Seq(ChiselGeneratorAnnotation(() => new S_AXI_GP(axiparam)))
+    Seq(ChiselGeneratorAnnotation(() => new S_AXI(axiparam)))
   )
 }

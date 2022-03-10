@@ -6,7 +6,7 @@ import chisel3.experimental.ChiselEnum
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
 import com.tsnlab.ipcore.npu.axi4.io.AXI4SlaveBundle
 
-class S_AXI_GP(axi4param: AXI4Param) extends Module {
+class S_AXI(axi4param: AXI4Param) extends Module {
   val S_AXI = IO(new AXI4SlaveBundle(axi4param))
   val GPIO = IO(new Bundle {
     val output = Output(UInt(8.W))

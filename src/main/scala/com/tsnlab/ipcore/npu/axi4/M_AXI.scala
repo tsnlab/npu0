@@ -7,7 +7,7 @@ import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
 import com.tsnlab.ipcore.npu.axi4.io.AXI4MasterBundle
 
 // ARM AXI High Performance interface (master)
-class M_AXI_HP(axi4param: AXI4Param) extends Module {
+class M_AXI(axi4param: AXI4Param) extends Module {
   val M_AXI = IO(new AXI4MasterBundle(axi4param))
 
   val axiReadState = RegInit(AXI4ReadState.ARVALID)
