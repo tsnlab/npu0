@@ -10,34 +10,6 @@ import com.tsnlab.ipcore.npu.axi4.io.AXI4MasterBundle
 class M_AXI(axi4param: AXI4Param) extends Module {
   val M_AXI = IO(new AXI4MasterBundle(axi4param))
 
-  val axiReadState = RegInit(AXI4ReadState.ARVALID)
-  val axiWriteState = RegInit(AXI4WriteState.AWVALID)
-
-  // Define some registers for the AXI output
-
-  // AR channel
-  val axi_araddr  = RegInit(0.U(axi4param.addrWidth.W))
-  val axi_arlen   = RegInit(0.U(axi4param.burstWidth.W))
-  val axi_arsize  = RegInit(0.U(3.W))
-  val axi_arburst = RegInit(0.U(2.W))
-  val axi_arlock  = RegInit(0.U(2.W))
-  val axi_arcache = RegInit(0.U(4.W))
-  val axi_arprot  = RegInit(0.U(3.W))
-  val axi_arid    = RegInit(0.U(axi4param.idWidth.W))
-  val axi_arqos   = RegInit(0.U(4.W))
-  val axi_arvalid = RegInit(0.B)
-
-  M_AXI.araddr   := axi_araddr
-  M_AXI.arlen    := axi_arlen
-  M_AXI.arsize   := axi_arsize
-  M_AXI.arburst  := axi_arburst
-  M_AXI.arlock   := axi_arlock
-  M_AXI.arcache  := axi_arcache
-  M_AXI.arprot   := axi_arprot
-  M_AXI.arid     := axi_arid
-  M_AXI.arqos    := axi_arqos
-  M_AXI.arvalid  := axi_arvalid
-
   // AW channel
   val axi_awaddr  = RegInit(0.U(axi4param.addrWidth.W))
   val axi_awlen   = RegInit(0.U(axi4param.burstWidth.W))
@@ -47,7 +19,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   val axi_awcache = RegInit(0.U(4.W))
   val axi_awprot  = RegInit(0.U(3.W))
   val axi_awid    = RegInit(0.U(axi4param.idWidth.W))
-  val axi_awqos   = RegInit(0.U(4.W))
+  val axi_awqos   = RegInit(0.U(4.W)) // See A8.1.1
   val axi_awvalid = RegInit(0.B)
 
   M_AXI.awaddr   := axi_awaddr
@@ -72,36 +44,54 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   M_AXI.wlast    := axi_wlast
   M_AXI.wvalid   := axi_wvalid
 
-  // R channel
+  // AR channel
+  val axi_araddr  = RegInit(0.U(axi4param.addrWidth.W))
+  val axi_arlen   = RegInit(0.U(axi4param.burstWidth.W))
+  val axi_arsize  = RegInit(0.U(3.W))
+  val axi_arburst = RegInit(0.U(2.W))
+  val axi_arlock  = RegInit(0.U(2.W))
+  val axi_arcache = RegInit(0.U(4.W))
+  val axi_arprot  = RegInit(0.U(3.W))
+  val axi_arid    = RegInit(0.U(axi4param.idWidth.W))
+  val axi_arqos   = RegInit(0.U(4.W)) // See A8.1.1
+  val axi_arvalid = RegInit(0.B)
+
+  M_AXI.araddr   := axi_araddr
+  M_AXI.arlen    := axi_arlen
+  M_AXI.arsize   := axi_arsize
+  M_AXI.arburst  := axi_arburst
+  M_AXI.arlock   := axi_arlock
+  M_AXI.arcache  := axi_arcache
+  M_AXI.arprot   := axi_arprot
+  M_AXI.arid     := axi_arid
+  M_AXI.arqos    := axi_arqos
+  M_AXI.arvalid  := axi_arvalid
+
   val axi_rlast   = RegInit(0.B)
   val axi_rready  = RegInit(0.B)
 
   M_AXI.rlast    := axi_rlast
   M_AXI.rready   := axi_rready
 
-  // B channel
   val axi_bready  = RegInit(0.B)
-  M_AXI.bready   := axi_bready
-  // Wire up bus data
 
-  // First, define the state machine for read
+  M_AXI.bready   := axi_bready
+
+  // State machine registers
+  val axiReadState = RegInit(AXI4ReadState.ARVALID)
+  val axiWriteState = RegInit(AXI4WriteState.AWVALID)
+
+  // State machine magic goes here
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
-      // TODO: Implement Read Address configuration
-      // Set up dummy value for master
-      axi_arburst := 1.U // MODE INCR
-      axi_arlen := 0.U // Only fetch one time
-      axi_arid := 1.U // TODO: FIXME: Find out right ID for this
-      axi_arsize := 2.U // TODO: Read the manual and find out
-
-      // Sets up ARVALID
+      // set up address and rise ARVALID
       axi_arvalid := 1.B
-      //
-      // Transit to next state
+      axi_arlen := 0.U // Single beat
       axiReadState := AXI4ReadState.ARREADY
     }
 
     is (AXI4ReadState.ARREADY) {
+      // Wait for ARREADY signal and move to next state
       when (M_AXI.arready) {
         axi_arvalid := 0.B
         axiReadState := AXI4ReadState.RVALID
@@ -109,23 +99,31 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     }
 
     is (AXI4ReadState.RVALID) {
-      // TODO: Check ARID match
+      // Wait for RVALID signal
+      axi_rready := 0.B
       when (M_AXI.rvalid) {
-        axi_rready := 1.B
         axiReadState := AXI4ReadState.RREADY
       }
     }
 
     is (AXI4ReadState.RREADY) {
-      // TODO: Implement burst counter properly
-      axi_rready := 0.B
-      axiReadState := AXI4ReadState.ARVALID
+      // Sample everything
+      axi_rready := 1.B
+      when (axi_arlen === 0.U) {
+        axiReadState := AXI4ReadState.ARVALID
+      }.otherwise {
+        axi_arlen := axi_arlen - 1.U
+        axiReadState := AXI4ReadState.RVALID
+      }
     }
   }
 
   switch (axiWriteState) {
     is (AXI4WriteState.AWVALID) {
+      // Set up address stuff.
+      // rise AWVALID
       axi_awvalid := 1.B
+      axi_awlen := 0.U
       axiWriteState := AXI4WriteState.AWREADY
     }
 
@@ -137,18 +135,29 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     }
 
     is (AXI4WriteState.WVALID) {
+      // TODO: Wait for the data and rise WVALID
+      axi_wdata := (0xDEADBEEFL).U
       axi_wvalid := 1.B
+      axiWriteState := AXI4WriteState.WREADY
     }
 
     is (AXI4WriteState.WREADY) {
-      // TODO: Implement burst counter properly
       when (M_AXI.wready) {
+        // TODO: Sample the data here
         axi_wvalid := 0.B
-        axiWriteState := AXI4WriteState.BVALID
+        // TODO: Optimize meeeee
+
+        when (axi_awlen === 0.U) {
+          axiWriteState := AXI4WriteState.BVALID
+        }.otherwise {
+          axi_awlen := axi_awlen - 1.U
+          axiWriteState := AXI4WriteState.WVALID
+        }
       }
     }
 
     is (AXI4WriteState.BVALID) {
+      // Wait for bvalid
       when (M_AXI.bvalid) {
         axi_bready := 1.B
         axiWriteState := AXI4WriteState.BREADY
@@ -157,7 +166,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.BREADY) {
       axi_bready := 0.B
-      axiWriteState := AXI4WriteState.AWVALID
+      axiWriteState := AXI4WriteState.AWREADY
     }
   }
 }
