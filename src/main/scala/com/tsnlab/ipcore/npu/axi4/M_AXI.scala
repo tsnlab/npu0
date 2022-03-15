@@ -87,6 +87,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // set up address and rise ARVALID
       axi_arvalid := 1.B
       axi_arlen := 0.U // Single beat
+      axi_araddr := "h0020_0000".U
+      axi_arid := 329.U
       axiReadState := AXI4ReadState.ARREADY
     }
 
