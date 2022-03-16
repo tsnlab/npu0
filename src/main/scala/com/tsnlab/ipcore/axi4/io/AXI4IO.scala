@@ -1,14 +1,14 @@
-package com.tsnlab.ipcore.npu.axi4.io
+package com.tsnlab.ipcore.axi4.io
 
 import chisel3._
-import com.tsnlab.ipcore.npu.axi4.AXI4Param
+import com.tsnlab.ipcore.axi4.AXI4Param
 
 // NOTE: Reference doc: http://www.gstitt.ece.ufl.edu/courses/fall15/eel4720_5721/labs/refs/AXI4_specification.pdf
 
 class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   // AXI4 Master IO
 
-  val clk     = Input(Clock())
+  //val clk     = Input(Clock())
 
   // AW channel
   val awaddr  = Output(UInt(param.addrWidth.W))
@@ -48,7 +48,7 @@ class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   val rdata   = Input(UInt(param.dataWidth.W))
   val rid     = Input(UInt(param.idWidth.W))
   val rvalid  = Input(Bool())
-  val rlast   = Output(Bool())
+  val rlast   = Input(Bool())
   val rready  = Output(Bool())
 
   // B channel
@@ -101,7 +101,7 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   val rdata   = Output(UInt(param.dataWidth.W))
   val rid     = Output(UInt(param.idWidth.W))
   val rvalid  = Output(Bool())
-  val rlast   = Input(Bool())
+  val rlast   = Output(Bool())
   val rready  = Input(Bool())
 
   // B channel

@@ -1,10 +1,10 @@
-package com.tsnlab.ipcore.npu.axi4
+package com.tsnlab.ipcore.axi4
 
 import chisel3._
 import chisel3.util.{switch, is}
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
-import com.tsnlab.ipcore.npu.axi4.io.AXI4SlaveBundle
+import com.tsnlab.ipcore.axi4.io.AXI4SlaveBundle
 
 class S_AXI(axi4param: AXI4Param) extends Module {
   val S_AXI = IO(new AXI4SlaveBundle(axi4param))
@@ -30,6 +30,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   val axi_rvalid  = RegInit(0.B)
   val axi_bvalid  = RegInit(0.B)
   val axi_rdata   = RegInit(0.U(axi4param.dataWidth.W))
+  val axi_rlast   = RegInit(0.B)
   val axi_rid     = RegInit(0.U(axi4param.idWidth.W))
   val axi_bid     = RegInit(0.U(axi4param.idWidth.W))
 
@@ -40,6 +41,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   S_AXI.bvalid  := axi_bvalid
   S_AXI.rdata   := axi_rdata
   S_AXI.rvalid  := axi_rvalid
+  S_AXI.rlast   := axi_rlast
   S_AXI.rid     := axi_rid
   S_AXI.bid     := axi_bid
 
@@ -73,6 +75,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
 
         // Set ARREADY to 1
         axi_arready := 1.B
+        axi_rlast   := 0.B
         axiReadState := AXI4ReadState.ARREADY
       }
     }
@@ -92,6 +95,9 @@ class S_AXI(axi4param: AXI4Param) extends Module {
 
       // Flag RVALID
       axi_rvalid := 1.B
+      when (axi_rlen === 0.U) {
+        axi_rlast := 1.B
+      }
       
       when (S_AXI.rready) {
         axiReadState := AXI4ReadState.RREADY

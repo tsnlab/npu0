@@ -3,11 +3,11 @@ package com.tsnlab.ipcore.npu
 import chisel3._
 import chisel3.util.{switch, is}
 import chisel3.experimental.ChiselEnum
-import com.tsnlab.ipcore.npu.axi4.AXI4Param
-import com.tsnlab.ipcore.npu.axi4.io.AXI4SlaveBundle
-import com.tsnlab.ipcore.npu.axi4.io.AXI4MasterBundle
-import com.tsnlab.ipcore.npu.axi4.M_AXI
-import com.tsnlab.ipcore.npu.axi4.S_AXI
+import com.tsnlab.ipcore.axi4.AXI4Param
+import com.tsnlab.ipcore.axi4.io.AXI4SlaveBundle
+import com.tsnlab.ipcore.axi4.io.AXI4MasterBundle
+import com.tsnlab.ipcore.axi4.M_AXI
+import com.tsnlab.ipcore.axi4.S_AXI
 
 object FPUProcessState extends ChiselEnum {
   val READY   = Value
@@ -16,15 +16,18 @@ object FPUProcessState extends ChiselEnum {
   val DONE    = Value
 }
 
-class FPGAWrapper(axi4param: AXI4Param) extends Module {
-  val M_AXI = IO(new AXI4MasterBundle(axi4param))
-  val S_AXI = IO(new AXI4SlaveBundle(axi4param))
+class FPGAWrapper(
+  axi4MasterParam: AXI4Param,
+  axi4SlaveParam: AXI4Param,
+) extends Module {
+  val M_AXI = IO(new AXI4MasterBundle(axi4MasterParam))
+  val S_AXI = IO(new AXI4SlaveBundle(axi4SlaveParam))
 
   // Our tiny cute RAM for MMIO regs
-  val mmioreg = SyncReadMem(16, UInt(axi4param.dataWidth.W))
+  val mmioreg = SyncReadMem(16, UInt(axi4SlaveParam.dataWidth.W))
 
-  val m_axi = Module(new M_AXI(axi4param));
-  val s_axi = Module(new S_AXI(axi4param));
+  val m_axi = Module(new M_AXI(axi4MasterParam));
+  val s_axi = Module(new S_AXI(axi4SlaveParam));
 
   // Connect them
   s_axi.S_AXI <> S_AXI

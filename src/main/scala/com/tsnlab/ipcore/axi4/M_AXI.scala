@@ -1,10 +1,10 @@
-package com.tsnlab.ipcore.npu.axi4
+package com.tsnlab.ipcore.axi4
 
 import chisel3._
 import chisel3.util.{switch, is}
 import chisel3.experimental.ChiselEnum
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
-import com.tsnlab.ipcore.npu.axi4.io.AXI4MasterBundle
+import com.tsnlab.ipcore.axi4.io.AXI4MasterBundle
 
 // ARM AXI High Performance interface (master)
 class M_AXI(axi4param: AXI4Param) extends Module {
@@ -67,10 +67,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   M_AXI.arqos    := axi_arqos
   M_AXI.arvalid  := axi_arvalid
 
-  val axi_rlast   = RegInit(0.B)
   val axi_rready  = RegInit(0.B)
 
-  M_AXI.rlast    := axi_rlast
   M_AXI.rready   := axi_rready
 
   val axi_bready  = RegInit(0.B)

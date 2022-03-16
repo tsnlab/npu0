@@ -1,4 +1,4 @@
-package com.tsnlab.ipcore.npu.axi4
+package com.tsnlab.ipcore.axi4
 
 import chisel3.experimental.ChiselEnum
 
