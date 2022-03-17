@@ -75,18 +75,55 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
   M_AXI.bready   := axi_bready
 
+  val memport_r = IO(new Bundle {
+    val addr = Input(UInt(axi4param.addrWidth.W))
+    val data = Output(UInt(axi4param.dataWidth.W))
+    val enable = Input(Bool())
+    val ready = Output(Bool())
+  })
+
+  val memport_r_addr = RegInit(0.U(axi4param.addrWidth.W))
+  val memport_r_data = RegInit(0.U(axi4param.dataWidth.W))
+  val memport_r_ready = RegInit(0.B)
+
+  memport_r.data  := memport_r_data
+  memport_r.ready := memport_r_ready
+
+  val memport_w = IO(new Bundle {
+    val addr = Input(UInt(axi4param.addrWidth.W))
+    val data = Input(UInt(axi4param.dataWidth.W))
+    val enable = Input(Bool())
+    val ready = Output(Bool())
+  })
+
+  val memport_w_addr = RegInit(0.U(axi4param.addrWidth.W))
+  val memport_w_data = RegInit(0.U(axi4param.dataWidth.W))
+  val memport_w_ready = RegInit(0.B)
+
+  memport_w.ready := memport_w_ready
+
   // State machine registers
-  val axiReadState = RegInit(AXI4ReadState.ARVALID)
-  val axiWriteState = RegInit(AXI4WriteState.AWVALID)
+  val axiReadState = RegInit(AXI4ReadState.NOOP)
+  val axiWriteState = RegInit(AXI4WriteState.NOOP)
 
   // State machine magic goes here
   switch (axiReadState) {
+    is (AXI4ReadState.NOOP) {
+      axi_arvalid := 0.B
+      memport_r_ready := 0.B
+      when (memport_r.enable) {
+        memport_r_addr := memport_r.addr
+        axiReadState := AXI4ReadState.ARVALID
+      }
+    }
+
     is (AXI4ReadState.ARVALID) {
       // set up address and rise ARVALID
       axi_arvalid := 1.B
       axi_arlen := 0.U // Single beat
-      axi_araddr := "h0020_0000".U
-      axi_arid := 329.U
+      //axi_araddr := "h0020_0000".U
+      axi_araddr := memport_r_addr
+      axi_arid := 137.U
       axiReadState := AXI4ReadState.ARREADY
     }
 
@@ -111,6 +148,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_rready := 1.B
       when (axi_arlen === 0.U) {
         axiReadState := AXI4ReadState.ARVALID
+        memport_r_ready := 1.B
       }.otherwise {
         axi_arlen := axi_arlen - 1.U
         axiReadState := AXI4ReadState.RVALID
@@ -119,10 +157,21 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   }
 
   switch (axiWriteState) {
+    is (AXI4WriteState.NOOP) {
+      axi_awvalid := 0.B
+      when (memport_w.enable) {
+        memport_w_addr := memport_w.addr
+        memport_w_data := memport_w.data
+        axiWriteState := AXI4WriteState.AWVALID
+      }
+    }
+
     is (AXI4WriteState.AWVALID) {
       // Set up address stuff.
       // rise AWVALID
       axi_awvalid := 1.B
+      axi_awaddr := memport_w_addr
+      axi_awid := 137.U
       axi_awlen := 0.U
       axiWriteState := AXI4WriteState.AWREADY
     }
@@ -136,7 +185,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.WVALID) {
       // TODO: Wait for the data and rise WVALID
-      axi_wdata := (0xDEADBEEFL).U
+      //axi_wdata := (0xDEADBEEFL).U
+      axi_wdata := memport_w_data
       axi_wvalid := 1.B
       axiWriteState := AXI4WriteState.WREADY
     }

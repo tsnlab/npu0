@@ -2,7 +2,7 @@ package com.tsnlab.ipcore.npu
 
 import chisel3._
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
-import com.tsnlab.ipcore.npu.FPGAWrapper
+import com.tsnlab.ipcore.npu.FPUWrapper
 import com.tsnlab.ipcore.axi4.{M_AXI, S_AXI, AXI4Param}
 
 object VerilogEmitter extends App {
@@ -37,7 +37,7 @@ object VerilogEmitter extends App {
   val chiselOpts = Array("-td", "vout")
   (new ChiselStage).emitVerilog(new M_AXI(axi4SlaveParam), chiselOpts)
   (new ChiselStage).emitVerilog(new S_AXI(axi4SlaveParam), chiselOpts)
-  (new ChiselStage).emitVerilog(new FPGAWrapper(axi4MasterParam, axi4SlaveParam), chiselOpts)
+  (new ChiselStage).emitVerilog(new FPUWrapper(axi4MasterParam, axi4SlaveParam), chiselOpts)
 
   // generate graph files for circuit visualization
   val elkOpts = Array("-td", "vout", "--lowFir")

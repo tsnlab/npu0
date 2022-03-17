@@ -18,6 +18,7 @@ case class AXI4Param (
 
 // AXI4 state machine definition
 object AXI4WriteState extends ChiselEnum {
+  val NOOP    = Value
   val AWVALID = Value
   val AWREADY = Value
   val WVALID  = Value
@@ -27,6 +28,7 @@ object AXI4WriteState extends ChiselEnum {
 }
 
 object AXI4ReadState extends ChiselEnum {
+  val NOOP    = Value
   val ARVALID = Value
   val ARREADY = Value
   val RVALID  = Value
