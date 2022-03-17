@@ -10,20 +10,28 @@ resolvers ++= Seq(
   Resolver.sonatypeRepo("releases")
 )
 
+lazy val commonSettings = Seq(
+  libraryDependencies ++= Seq(
+    "edu.berkeley.cs" %% "chisel3" % "3.5.+",
+    "edu.berkeley.cs" %% "chiseltest" % "0.5.+" % "test"
+  ),
+  scalacOptions ++= Seq(
+    "-Ymacro-annotations",
+    "-language:reflectiveCalls",
+    "-deprecation",
+    "-feature",
+    "-Xcheckinit"
+  ),
+  addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % "3.5.+" cross CrossVersion.full),
+)
+
 lazy val root = (project in file("."))
-  .settings(
+  .settings(commonSettings, Seq(
     name := "com.tsnlab.ipcore.npu",
     libraryDependencies ++= Seq(
-      "edu.berkeley.cs" %% "chisel3" % "3.5.+",
       "org.easysoc" %% "layered-firrtl" % "1.1-SNAPSHOT",
-      "edu.berkeley.cs" %% "chiseltest" % "0.5.+" % "test"
     ),
-    scalacOptions ++= Seq(
-      "-Ymacro-annotations",
-      "-language:reflectiveCalls",
-      "-deprecation",
-      "-feature",
-      "-Xcheckinit"
-    ),
-    addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % "3.5.+" cross CrossVersion.full)
-  )
+  )).dependsOn(hardfloat_fudian)
+
+lazy val hardfloat_fudian = (project in file("fudian"))
+  .settings(commonSettings)
