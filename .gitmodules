@@ -1,0 +1,3 @@
+[submodule "fudian"]
+	path = fudian
+	url = https://github.com/OpenXiangShan/fudian.git
