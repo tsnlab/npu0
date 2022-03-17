@@ -20,6 +20,10 @@ class FPUWrapper(
   axi4MasterParam: AXI4Param,
   axi4SlaveParam: AXI4Param,
 ) extends Module {
+  // For now, hardcode FPU parameter
+  val mantissa = 23
+  val exponent = 8
+
   val M_AXI = IO(new AXI4MasterBundle(axi4MasterParam))
   val S_AXI = IO(new AXI4SlaveBundle(axi4SlaveParam))
 
@@ -56,11 +60,13 @@ class FPUWrapper(
     }
   }
 
-  val flagwire    = Wire(Bits(axi4SlaveParam.dataWidth.W))  
+  val flagwire    = Wire(Bits(8.W))
+  val opcodewire  = Wire(UInt(8.W))
   val srcaddrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
   val dstaddrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
 
-  flagwire    := regvec(0)
+  flagwire    := regvec(0)(7,0)
+  opcodewire  := regvec(0)(15,8)
   srcaddrwire := regvec(2)
   dstaddrwire := regvec(3)
 
@@ -74,9 +80,17 @@ class FPUWrapper(
   // Some awesome state machine to handle the fault
   // Read DRAM from bus master 
 
+  // FPU module
+  val fpu = Module(new FPU(exponent, mantissa))
+
   val fpuState = RegInit(FPUProcessState.READY)
   
-  val payloadbuf = RegInit(0.U(32.W))
+  val payloadbuf1 = RegInit(0.U(32.W))
+  val payloadbuf2 = RegInit(0.U(32.W))
+
+  fpu.data.a := payloadbuf1
+  fpu.data.b := payloadbuf2
+  fpu.control.op := opcodewire(1,0)
 
   switch (fpuState) {
     is (FPUProcessState.READY) {
@@ -91,17 +105,16 @@ class FPUWrapper(
       memport_r_addr := srcaddrwire
       memport_r_enable := 1.B
       when (m_axi.memport_r.ready) {
-        payloadbuf := m_axi.memport_r.data
+        payloadbuf1 := m_axi.memport_r.data
         memport_r_enable := 0.B
         fpuState := FPUProcessState.PROCESS
       }
     }
 
     is (FPUProcessState.PROCESS) {
-      // TODO: Implement FPU wiring here
       fpuState := FPUProcessState.DONE
       memport_w_addr := dstaddrwire
-      memport_w_data := payloadbuf
+      memport_w_data := fpu.data.y
       memport_w_enable := 1.B
     }
 
