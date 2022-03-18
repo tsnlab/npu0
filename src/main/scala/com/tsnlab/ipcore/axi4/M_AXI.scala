@@ -120,6 +120,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4ReadState.ARVALID) {
       // set up address and rise ARVALID
       axi_arvalid := 1.B
+      axi_arprot := 1.U
       axi_arlen := 0.U // Single beat
       //axi_araddr := "h0020_0000".U
       axi_araddr := memport_r_addr
@@ -162,6 +163,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4WriteState.NOOP) {
       axi_awvalid := 0.B
       memport_w_ready := 0.B
+      axi_wlast := 0.B
       when (memport_w.enable) {
         memport_w_addr := memport_w.addr
         memport_w_data := memport_w.data
@@ -170,12 +172,17 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     }
 
     is (AXI4WriteState.AWVALID) {
+      axi_awsize := "h2".U // 32-bit
+
       // Set up address stuff.
       // rise AWVALID
       axi_awvalid := 1.B
       axi_awaddr := memport_w_addr
       axi_awid := 137.U
       axi_awlen := 0.U
+      axi_awprot := 1.U
+      axi_awburst := 1.U // INCR
+
       axiWriteState := AXI4WriteState.AWREADY
     }
 
@@ -187,9 +194,16 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     }
 
     is (AXI4WriteState.WVALID) {
+      // TODO: FIXME
+      // Always send 0b1111 on wstrb (all 4 bytes are valid)
+      axi_wstrb := "hFF".U
+
       // TODO: Wait for the data and rise WVALID
       axi_wdata := memport_w_data
       axi_wvalid := 1.B
+      when (axi_awlen === 0.U) {
+        axi_wlast := 1.B
+      }
       axiWriteState := AXI4WriteState.WREADY
     }
 
@@ -197,6 +211,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       when (M_AXI.wready) {
         // TODO: Sample the data here
         axi_wvalid := 0.B
+        axi_wlast := 0.B
         // TODO: Optimize meeeee
 
         when (axi_awlen === 0.U) {
@@ -210,8 +225,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.BVALID) {
       // Wait for bvalid
+      axi_bready := 1.B
       when (M_AXI.bvalid) {
-        axi_bready := 1.B
         axiWriteState := AXI4WriteState.BREADY
       }
     }
