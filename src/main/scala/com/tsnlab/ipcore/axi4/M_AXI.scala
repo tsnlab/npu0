@@ -147,7 +147,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // Sample everything
       axi_rready := 1.B
       when (axi_arlen === 0.U) {
-        axiReadState := AXI4ReadState.ARVALID
+        axiReadState := AXI4ReadState.NOOP
         memport_r_ready := 1.B
       }.otherwise {
         axi_arlen := axi_arlen - 1.U
@@ -185,7 +185,6 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.WVALID) {
       // TODO: Wait for the data and rise WVALID
-      //axi_wdata := (0xDEADBEEFL).U
       axi_wdata := memport_w_data
       axi_wvalid := 1.B
       axiWriteState := AXI4WriteState.WREADY
@@ -216,7 +215,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.BREADY) {
       axi_bready := 0.B
-      axiWriteState := AXI4WriteState.AWREADY
+      axiWriteState := AXI4WriteState.NOOP
     }
   }
 }
