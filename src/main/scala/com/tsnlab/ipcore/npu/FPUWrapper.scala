@@ -57,21 +57,21 @@ class FPUWrapper(
 
   when (s_axi.REGMEM.we) {
     for (i <- 0 to 3) {
-      when (s_axi.REGMEM.addr(1, 0) === i.U) {
+      when (s_axi.REGMEM.addr(3, 2) === i.U) {
         regvec(i) := s_axi.REGMEM.data
       }
     }
   }
 
-  val flagwire    = Wire(Bits(8.W))
-  val opcodewire  = Wire(UInt(8.W))
-  val srcaddrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
-  val dstaddrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
+  val flagwire     = Wire(Bits(8.W))
+  val opcodewire   = Wire(UInt(8.W))
+  val src1addrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
+  val dstaddrwire  = Wire(UInt(axi4SlaveParam.dataWidth.W))
 
-  flagwire    := regvec(0)(7,0)
-  opcodewire  := regvec(0)(15,8)
-  srcaddrwire := regvec(2)
-  dstaddrwire := regvec(3)
+  flagwire     := regvec(0)(7,0)
+  opcodewire   := regvec(0)(15,8)
+  src1addrwire := regvec(2)
+  dstaddrwire  := regvec(3)
 
   //// Hook up S_AXI to our tiny, cute memory
   //when (s_axi.REGMEM.we) {
@@ -107,7 +107,7 @@ class FPUWrapper(
 
     is (FPUProcessState.FETCH) {
       // Do data fetch
-      memport_r_addr := srcaddrwire
+      memport_r_addr := src1addrwire
       memport_r_enable := 1.B
       when (m_axi.memport_r.ready) {
         payloadbuf1 := m_axi.memport_r.data
