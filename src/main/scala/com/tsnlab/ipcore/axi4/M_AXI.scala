@@ -147,7 +147,9 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // Sample everything
       axi_rready := 1.B
       when (axi_arlen === 0.U) {
-        axiReadState := AXI4ReadState.NOOP
+        when (memport_r.enable === 0.U) {
+          axiReadState := AXI4ReadState.NOOP
+        }
         memport_r_ready := 1.B
       }.otherwise {
         axi_arlen := axi_arlen - 1.U
@@ -159,6 +161,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   switch (axiWriteState) {
     is (AXI4WriteState.NOOP) {
       axi_awvalid := 0.B
+      memport_w_ready := 0.B
       when (memport_w.enable) {
         memport_w_addr := memport_w.addr
         memport_w_data := memport_w.data
@@ -215,7 +218,10 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.BREADY) {
       axi_bready := 0.B
-      axiWriteState := AXI4WriteState.NOOP
+      memport_w_ready := 1.B
+      when (memport_w.enable === 0.U) {
+        axiWriteState := AXI4WriteState.NOOP
+      }
     }
   }
 }
