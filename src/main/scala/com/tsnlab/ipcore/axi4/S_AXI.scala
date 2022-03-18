@@ -8,18 +8,12 @@ import com.tsnlab.ipcore.axi4.io.AXI4SlaveBundle
 
 class S_AXI(axi4param: AXI4Param) extends Module {
   val S_AXI = IO(new AXI4SlaveBundle(axi4param))
-
-  // Memory port
-  val MEMIO = IO(new Bundle{
-    val we = Output(Bool())
+  val REGMEM = IO(new Bundle {
+    val we   = Output(Bool())
     val addr = Output(UInt(axi4param.addrWidth.W))
     val data = Output(UInt(axi4param.dataWidth.W))
   })
 
-  val reset_n = (!reset.asBool).asAsyncReset
-
-  //withClock(S_AXI.clk) {
-  //withClock(clock) {
   val axiReadState = RegInit(AXI4ReadState.ARVALID)
   val axiWriteState = RegInit(AXI4WriteState.AWVALID)
 
@@ -28,11 +22,12 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   val axi_arready = RegInit(0.B)
   val axi_wready  = RegInit(0.B)
   val axi_rvalid  = RegInit(0.B)
+  val axi_rlast   = RegInit(0.B)
   val axi_bvalid  = RegInit(0.B)
   val axi_rdata   = RegInit(0.U(axi4param.dataWidth.W))
-  val axi_rlast   = RegInit(0.B)
   val axi_rid     = RegInit(0.U(axi4param.idWidth.W))
   val axi_bid     = RegInit(0.U(axi4param.idWidth.W))
+  val axi_bresp   = RegInit(0.U(2.W))
 
   // Wire up them to the output!
   S_AXI.awready := axi_awready
@@ -44,6 +39,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   S_AXI.rlast   := axi_rlast
   S_AXI.rid     := axi_rid
   S_AXI.bid     := axi_bid
+  S_AXI.bresp   := axi_bresp
 
   // AXI address registers
   val axi_raddr  = RegInit(0.U(axi4param.addrWidth.W))
@@ -53,14 +49,15 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   val axi_arid   = RegInit(0.U(axi4param.idWidth.W))
   val axi_awid   = RegInit(0.U(axi4param.idWidth.W))
 
-  // MEMIO
-  val mem_we     = RegInit(0.B)
-  val mem_addr   = RegInit(0.U(axi4param.addrWidth.W))
-  val mem_data   = RegInit(0.U(axi4param.dataWidth.W))
+  // Regmme
 
-  MEMIO.we      := mem_we
-  MEMIO.addr    := mem_addr
-  MEMIO.data    := mem_data
+  val regmem_we  = RegInit(0.B)
+  val regmem_addr= RegInit(0.U(axi4param.addrWidth.W))
+  val regmem_data= RegInit(0.U(axi4param.dataWidth.W))
+  
+  REGMEM.we     := regmem_we
+  REGMEM.addr   := regmem_addr
+  REGMEM.data   := regmem_data
 
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
@@ -75,7 +72,6 @@ class S_AXI(axi4param: AXI4Param) extends Module {
 
         // Set ARREADY to 1
         axi_arready := 1.B
-        axi_rlast   := 0.B
         axiReadState := AXI4ReadState.ARREADY
       }
     }
@@ -95,6 +91,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
 
       // Flag RVALID
       axi_rvalid := 1.B
+      
       when (axi_rlen === 0.U) {
         axi_rlast := 1.B
       }
@@ -107,6 +104,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4ReadState.RREADY) {
       // Clear RVALID
       axi_rvalid := 0.B
+      axi_rlast  := 0.B
 
       when (axi_rlen === 0.U) {
         axiReadState := AXI4ReadState.ARVALID
@@ -139,12 +137,13 @@ class S_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4WriteState.AWREADY) {
       // Turn off AWREADY
       axi_awready := 0.B
+      // Disable write enable
+      regmem_we   := 0.B
 
       axiWriteState := AXI4WriteState.WVALID
     }
 
     is (AXI4WriteState.WVALID) {
-      mem_we := 0.B
       // Wait for WVALID
       when (S_AXI.wvalid) {
         // Write is valid.
@@ -157,14 +156,10 @@ class S_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.WREADY) {
       // Fetch data from the bus
-      // ... and write it to MMIO reg
-      mem_we := 1.B
-      mem_addr := axi_waddr
-      mem_data := S_AXI.wdata
-      //
       // ... and write it to gpio_reg
-      //
-      //gpio_reg := S_AXI.wdata(7,0)
+      regmem_we   := 1.B
+      regmem_addr := axi_waddr
+      regmem_data := S_AXI.wdata
 
       // Turn off WREADY
       axi_wready := 0.B
@@ -180,8 +175,12 @@ class S_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.BVALID) {
       // Turn on BVALID
+      axi_bid    := axi_awid
       axi_bvalid := 1.B
-      mem_we := 0.B
+      // Always ACK burst write... for now.
+      axi_bresp := 0.U
+      // Disable write enable
+      regmem_we   := 0.B
 
       // Wait for BREADY
       when (S_AXI.bready) {
@@ -196,7 +195,4 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       axiWriteState := AXI4WriteState.AWVALID
     }
   }
-
-  // Always ACK burst write
-  S_AXI.bresp := 0.U
 }

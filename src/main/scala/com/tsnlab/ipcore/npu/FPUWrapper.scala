@@ -26,6 +26,9 @@ class FPUWrapper(
 
   val M_AXI = IO(new AXI4MasterBundle(axi4MasterParam))
   val S_AXI = IO(new AXI4SlaveBundle(axi4SlaveParam))
+  val debug = IO(new Bundle{
+    val led = Output(UInt(4.W))
+  })
 
   // Our tiny cute RAM for MMIO regs
   val mmioreg = SyncReadMem(16, UInt(axi4SlaveParam.dataWidth.W))
@@ -52,10 +55,10 @@ class FPUWrapper(
   // Define our tiny tiny cute MMIO register.
   val regvec = RegInit(VecInit(Seq.fill(4)(0.U(axi4SlaveParam.dataWidth.W))))
 
-  when (s_axi.MEMIO.we) {
+  when (s_axi.REGMEM.we) {
     for (i <- 0 to 3) {
-      when (s_axi.MEMIO.addr(1, 0) === i.U) {
-        regvec(i) := s_axi.MEMIO.data
+      when (s_axi.REGMEM.addr(1, 0) === i.U) {
+        regvec(i) := s_axi.REGMEM.data
       }
     }
   }
@@ -71,7 +74,7 @@ class FPUWrapper(
   dstaddrwire := regvec(3)
 
   //// Hook up S_AXI to our tiny, cute memory
-  //when (s_axi.MEMIO.we) {
+  //when (s_axi.REGMEM.we) {
   //  val addrwire = Wire(UInt(4.W)) // TODO: Un-hardcode me.
   //  addrwire := s_axi.MEMIO.addr(6, 2) // Cut last 2 bit.
   //  mmioreg.write(addrwire, s_axi.MEMIO.data)
@@ -91,6 +94,8 @@ class FPUWrapper(
   fpu.data.a := payloadbuf1
   fpu.data.b := payloadbuf2
   fpu.control.op := opcodewire(1,0)
+
+  debug.led := fpuState.asUInt()
 
   switch (fpuState) {
     is (FPUProcessState.READY) {

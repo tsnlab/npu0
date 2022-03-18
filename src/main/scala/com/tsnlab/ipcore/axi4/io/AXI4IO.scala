@@ -8,7 +8,8 @@ import com.tsnlab.ipcore.axi4.AXI4Param
 class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   // AXI4 Master IO
 
-  //val clk     = Input(Clock())
+  // should we use this...?
+  // val clk     = Input(Clock())
 
   // AW channel
   val awaddr  = Output(UInt(param.addrWidth.W))
@@ -47,8 +48,8 @@ class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   // R channel
   val rdata   = Input(UInt(param.dataWidth.W))
   val rid     = Input(UInt(param.idWidth.W))
-  val rvalid  = Input(Bool())
   val rlast   = Input(Bool())
+  val rvalid  = Input(Bool())
   val rready  = Output(Bool())
 
   // B channel
@@ -100,8 +101,8 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   // R channel
   val rdata   = Output(UInt(param.dataWidth.W))
   val rid     = Output(UInt(param.idWidth.W))
-  val rvalid  = Output(Bool())
   val rlast   = Output(Bool())
+  val rvalid  = Output(Bool())
   val rready  = Input(Bool())
 
   // B channel
