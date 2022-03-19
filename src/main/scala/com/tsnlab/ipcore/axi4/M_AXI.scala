@@ -12,7 +12,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
   // AW channel
   val axi_awaddr  = RegInit(0.U(axi4param.addrWidth.W))
-  val axi_awlen   = RegInit(0.U(axi4param.burstWidth.W))
+  val axi_awlen   = RegInit(0.U(axi4param.getBurstWidth()))
   val axi_awsize  = RegInit(0.U(3.W))
   val axi_awburst = RegInit(0.U(2.W))
   val axi_awlock  = RegInit(0.U(2.W))
@@ -35,7 +35,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
   // W channel
   val axi_wdata   = RegInit(0.U(axi4param.dataWidth.W))
-  val axi_wstrb   = RegInit(0.U(((axi4param.dataWidth + 7) / 8).W)) // See A10.3.4
+  val axi_wstrb   = RegInit(0.U(axi4param.getStrbWidth()))
   val axi_wlast   = RegInit(0.B)
   val axi_wvalid  = RegInit(0.B)
 
@@ -44,9 +44,17 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   M_AXI.wlast    := axi_wlast
   M_AXI.wvalid   := axi_wvalid
 
+  val axi_wid     = RegInit(0.U(axi4param.dataWidth.W))
+  // If it has WID, wire it up.
+  // Mostly, AXI3 specific.
+  M_AXI.wid match {
+    case wid: UInt => wid := axi_wid
+    case _ => {}
+  }
+
   // AR channel
   val axi_araddr  = RegInit(0.U(axi4param.addrWidth.W))
-  val axi_arlen   = RegInit(0.U(axi4param.burstWidth.W))
+  val axi_arlen   = RegInit(0.U(axi4param.getBurstWidth()))
   val axi_arsize  = RegInit(0.U(3.W))
   val axi_arburst = RegInit(0.U(2.W))
   val axi_arlock  = RegInit(0.U(2.W))
@@ -198,6 +206,10 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // Always send 0b1111 on wstrb (all 4 bytes are valid)
       axi_wstrb := "hFF".U
 
+      // AXI3 specific but write value to it anyway
+      // FIRRTL optimizer will strip out register
+      // when it thinks it is not needed.
+      axi_wid := 137.U
       // TODO: Wait for the data and rise WVALID
       axi_wdata := memport_w_data
       axi_wvalid := 1.B

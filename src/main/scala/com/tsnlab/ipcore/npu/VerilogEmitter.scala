@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.stage.{ChiselStage, ChiselGeneratorAnnotation}
 import com.tsnlab.ipcore.npu.FPUWrapper
 import com.tsnlab.ipcore.axi4.{M_AXI, S_AXI, AXI4Param}
+import com.tsnlab.ipcore.axi4.AXIVariant
 
 object VerilogEmitter extends App {
   // Configure the IP using some values
@@ -11,26 +12,24 @@ object VerilogEmitter extends App {
     idWidth = 6,
     addrWidth = 32,
     dataWidth = 32,
-    burstWidth = 4,
     awuserWidth = 2,
     aruserWidth = 2,
     wuserWidth = 0,
     ruserWidth = 0,
     buserWidth = 0,
-    isLite = false,
+    busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 
   val axi4SlaveParam = AXI4Param (
     idWidth = 12,
     addrWidth = 32,
     dataWidth = 32,
-    burstWidth = 4, // ZYNQ-7000 Uses AXI3
     awuserWidth = 2,
     aruserWidth = 2,
     wuserWidth = 0,
     ruserWidth = 0,
     buserWidth = 0,
-    isLite = false,
+    busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 
   // Emit the verilog

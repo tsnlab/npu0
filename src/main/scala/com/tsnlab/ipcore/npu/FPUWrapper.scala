@@ -28,6 +28,7 @@ class FPUWrapper(
   val S_AXI = IO(new AXI4SlaveBundle(axi4SlaveParam))
   val debug = IO(new Bundle{
     val led = Output(UInt(4.W))
+    val busy = Output(Bool())
   })
 
   // Our tiny cute RAM for MMIO regs
@@ -96,6 +97,7 @@ class FPUWrapper(
   fpu.control.op := opcodewire(1,0)
 
   debug.led := fpuState.asUInt()
+  debug.busy := regvec(1)(0)
 
   switch (fpuState) {
     is (FPUProcessState.READY) {
@@ -125,6 +127,7 @@ class FPUWrapper(
 
     is (FPUProcessState.DONE) {
       when (m_axi.memport_w.ready) {
+        regvec(0) := 0.U
         regvec(1) := 0.U
         memport_w_enable := 0.B
         fpuState := FPUProcessState.READY

@@ -44,8 +44,8 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   // AXI address registers
   val axi_raddr  = RegInit(0.U(axi4param.addrWidth.W))
   val axi_waddr  = RegInit(0.U(axi4param.addrWidth.W))
-  val axi_rlen   = RegInit(0.U(axi4param.burstWidth.W))
-  val axi_wlen   = RegInit(0.U(axi4param.burstWidth.W))
+  val axi_rlen   = RegInit(0.U(axi4param.getBurstWidth()))
+  val axi_wlen   = RegInit(0.U(axi4param.getBurstWidth()))
   val axi_arid   = RegInit(0.U(axi4param.idWidth.W))
   val axi_awid   = RegInit(0.U(axi4param.idWidth.W))
 
