@@ -9,6 +9,7 @@ import com.tsnlab.ipcore.axi4.io.AXI4MasterBundle
 import com.tsnlab.ipcore.axi4.M_AXI
 import com.tsnlab.ipcore.axi4.S_AXI
 import chisel3.util.MuxLookup
+import chisel3.util.Cat
 
 object FPUProcessState extends ChiselEnum {
   val READY   = Value
@@ -108,12 +109,12 @@ class FPUWrapper(
   fpu.control.op := opcodewire(1,0)
 
   debug.led := fpuState.asUInt()
-  debug.busy := regvec(1)(0)
+  debug.busy := regvec(0)(1)
 
   switch (fpuState) {
     is (FPUProcessState.READY) {
       when (flagwire(0) === 1.B) {
-        regvec(1) := 1.U
+        regvec(0) := Cat(regvec(0)(31,2), 1.B, regvec(0)(0))
         fpuState := FPUProcessState.FETCH01
       }
     }
@@ -154,8 +155,7 @@ class FPUWrapper(
 
     is (FPUProcessState.DONE) {
       when (m_axi.memport_w.ready) {
-        regvec(0) := 0.U
-        regvec(1) := 0.U
+        regvec(0) := Cat(regvec(0)(31,2), 0.B, 0.B)
         memport_w_enable := 0.B
         fpuState := FPUProcessState.READY
       }
