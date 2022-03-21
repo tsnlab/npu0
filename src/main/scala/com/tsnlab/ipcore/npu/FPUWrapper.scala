@@ -25,8 +25,8 @@ class FPUWrapper(
   axi4SlaveParam: AXI4Param,
 ) extends Module {
   // For now, hardcode FPU parameter
-  val mantissa = 23
-  val exponent = 8
+  val mantissa = 8
+  val exponent = 7
 
   val M_AXI = IO(new AXI4MasterBundle(axi4MasterParam))
   val S_AXI = IO(new AXI4SlaveBundle(axi4SlaveParam))
