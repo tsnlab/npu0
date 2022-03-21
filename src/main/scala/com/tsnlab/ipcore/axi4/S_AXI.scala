@@ -14,6 +14,11 @@ class S_AXI(axi4param: AXI4Param) extends Module {
     val data = Output(UInt(axi4param.dataWidth.W))
   })
 
+  val REGMEM_R = IO(new Bundle {
+    val addr = Output(UInt(axi4param.addrWidth.W))
+    val data = Input(UInt(axi4param.dataWidth.W))
+  })
+
   val axiReadState = RegInit(AXI4ReadState.ARVALID)
   val axiWriteState = RegInit(AXI4WriteState.AWVALID)
 
@@ -54,10 +59,12 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   val regmem_we  = RegInit(0.B)
   val regmem_addr= RegInit(0.U(axi4param.addrWidth.W))
   val regmem_data= RegInit(0.U(axi4param.dataWidth.W))
+  val regmem_r_addr= RegInit(0.U(axi4param.addrWidth.W))
   
   REGMEM.we     := regmem_we
   REGMEM.addr   := regmem_addr
   REGMEM.data   := regmem_data
+  REGMEM_R.addr := regmem_r_addr
 
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
@@ -69,6 +76,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
         // Extract required information from the bus
         axi_rlen := S_AXI.arlen
         axi_arid := S_AXI.arid
+        regmem_r_addr := S_AXI.araddr
 
         // Set ARREADY to 1
         axi_arready := 1.B
@@ -87,7 +95,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       // Set up return data
       axi_rid := axi_arid
       // TODO: set up rresp
-      axi_rdata := (0xDEADBEEFL).U // Dummy data
+      axi_rdata := REGMEM_R.data
 
       // Flag RVALID
       axi_rvalid := 1.B

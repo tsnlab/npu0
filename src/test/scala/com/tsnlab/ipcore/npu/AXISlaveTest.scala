@@ -13,13 +13,12 @@ class AXISlaveTest extends AnyFreeSpec with ChiselScalatestTester {
     idWidth = 12,
     addrWidth = 32,
     dataWidth = 32,
-    burstWidth = 4, // ZYNQ-7000 Uses AXI3
     awuserWidth = 2,
     aruserWidth = 2,
     wuserWidth = 0,
     ruserWidth = 0,
     buserWidth = 0,
-    isLite = false,
+    busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 
   "Simulate and test bus read" in {

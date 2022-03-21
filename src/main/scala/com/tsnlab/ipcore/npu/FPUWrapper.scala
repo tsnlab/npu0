@@ -8,11 +8,13 @@ import com.tsnlab.ipcore.axi4.io.AXI4SlaveBundle
 import com.tsnlab.ipcore.axi4.io.AXI4MasterBundle
 import com.tsnlab.ipcore.axi4.M_AXI
 import com.tsnlab.ipcore.axi4.S_AXI
+import chisel3.util.MuxLookup
 
 object FPUProcessState extends ChiselEnum {
   val READY   = Value
   val FETCH   = Value
   val PROCESS = Value
+  val BUBBLE = Value
   val DONE    = Value
 }
 
@@ -30,9 +32,6 @@ class FPUWrapper(
     val led = Output(UInt(4.W))
     val busy = Output(Bool())
   })
-
-  // Our tiny cute RAM for MMIO regs
-  val mmioreg = SyncReadMem(16, UInt(axi4SlaveParam.dataWidth.W))
 
   val m_axi = Module(new M_AXI(axi4MasterParam));
   val s_axi = Module(new S_AXI(axi4SlaveParam));
@@ -53,6 +52,7 @@ class FPUWrapper(
   m_axi.memport_w.data := memport_w_data
   m_axi.memport_w.enable := memport_w_enable
 
+
   // Define our tiny tiny cute MMIO register.
   val regvec = RegInit(VecInit(Seq.fill(4)(0.U(axi4SlaveParam.dataWidth.W))))
 
@@ -63,6 +63,14 @@ class FPUWrapper(
       }
     }
   }
+
+  // TODO: Clean me up!
+  s_axi.REGMEM_R.data := MuxLookup(s_axi.REGMEM_R.addr(3,2), "h0000_0000".U, Array(
+    0.U -> regvec(0),
+    1.U -> regvec(1),
+    2.U -> regvec(2),
+    3.U -> regvec(3),
+  ))
 
   val flagwire     = Wire(Bits(8.W))
   val opcodewire   = Wire(UInt(8.W))
@@ -113,12 +121,18 @@ class FPUWrapper(
       memport_r_enable := 1.B
       when (m_axi.memport_r.ready) {
         payloadbuf1 := m_axi.memport_r.data
+        payloadbuf2 := m_axi.memport_r.data
         memport_r_enable := 0.B
         fpuState := FPUProcessState.PROCESS
       }
     }
 
     is (FPUProcessState.PROCESS) {
+      // Bubble one cycle
+      fpuState := FPUProcessState.BUBBLE
+    }
+
+    is (FPUProcessState.BUBBLE) {
       fpuState := FPUProcessState.DONE
       memport_w_addr := dstaddrwire
       memport_w_data := fpu.data.y

@@ -154,6 +154,9 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4ReadState.RREADY) {
       // Sample everything
+      memport_r_data := M_AXI.rdata
+
+      //Flag RREADY
       axi_rready := 1.B
       when (axi_arlen === 0.U) {
         when (memport_r.enable === 0.U) {
