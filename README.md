@@ -77,3 +77,38 @@ In A (operation) B = Y,
 ## Errata
 
 * 데이터 레지스터에 들어가는 주소는 반드시 버스 폭에 맞게 정렬되어 있어야 함.
+
+## C 코드 예제
+```
+#include "xil_cache.h"
+
+// ...
+
+size_t sz = 8; // Modify it wisely
+float *a = (float*) malloc(sz); // Allocate 1kb
+float *b = (float*) malloc(sz); // Allocate 1kb
+float *c = (float*) malloc(sz); // Allocate 1kb
+
+// Set up values on a, b, c
+// Flush
+Xil_DCacheFlushRange((INTPTR)a, sz);
+Xil_DCacheFlushRange((INTPTR)b, sz);
+
+volatile uint32_t *flagreg = (uint32_t*) 0x40000000;
+volatile uint32_t *reg_a   = (uint32_t*) 0x40000004;
+volatile uint32_t *reg_b   = (uint32_t*) 0x40000008;
+volatile uint32_t *reg_c   = (uint32_t*) 0x4000000C;
+
+*reg_a = (uint32_t) a;
+*reg_b = (uint32_t) b;
+*reg_c = (uint32_t) c;
+
+*flagreg = 0x00000001 | (0x00 << 8); // 위 테이블 참조하여 계산 opcode 설정
+
+while(!(*flagreg & 0x01));
+
+
+Xil_DCacheInvalidateRange((INTPTR)c, sz);
+
+// Grab value from C
+```
