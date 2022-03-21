@@ -12,7 +12,8 @@ import chisel3.util.MuxLookup
 
 object FPUProcessState extends ChiselEnum {
   val READY   = Value
-  val FETCH   = Value
+  val FETCH01   = Value
+  val FETCH02   = Value
   val PROCESS = Value
   val BUBBLE = Value
   val DONE    = Value
@@ -75,11 +76,13 @@ class FPUWrapper(
   val flagwire     = Wire(Bits(8.W))
   val opcodewire   = Wire(UInt(8.W))
   val src1addrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
+  val src2addrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
   val dstaddrwire  = Wire(UInt(axi4SlaveParam.dataWidth.W))
 
   flagwire     := regvec(0)(7,0)
   opcodewire   := regvec(0)(15,8)
-  src1addrwire := regvec(2)
+  src1addrwire := regvec(1)
+  src2addrwire := regvec(2)
   dstaddrwire  := regvec(3)
 
   //// Hook up S_AXI to our tiny, cute memory
@@ -111,16 +114,26 @@ class FPUWrapper(
     is (FPUProcessState.READY) {
       when (flagwire(0) === 1.B) {
         regvec(1) := 1.U
-        fpuState := FPUProcessState.FETCH
+        fpuState := FPUProcessState.FETCH01
       }
     }
 
-    is (FPUProcessState.FETCH) {
+    is (FPUProcessState.FETCH01) {
       // Do data fetch
       memport_r_addr := src1addrwire
       memport_r_enable := 1.B
       when (m_axi.memport_r.ready) {
         payloadbuf1 := m_axi.memport_r.data
+        memport_r_enable := 0.B
+        fpuState := FPUProcessState.FETCH02
+      }
+    }
+
+    is (FPUProcessState.FETCH02) {
+      // Do data fetch
+      memport_r_addr := src2addrwire
+      memport_r_enable := 1.B
+      when (m_axi.memport_r.ready) {
         payloadbuf2 := m_axi.memport_r.data
         memport_r_enable := 0.B
         fpuState := FPUProcessState.PROCESS
