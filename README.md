@@ -87,7 +87,7 @@ In A (operation) B = Y,
 size_t sz = 8; // Modify it wisely
 float *a = (float*) malloc(sz); // Allocate 1kb
 float *b = (float*) malloc(sz); // Allocate 1kb
-float *c = (float*) malloc(sz); // Allocate 1kb
+volatile float *c = (float*) malloc(sz); // Allocate 1kb
 
 // Set up values on a, b, c
 // Flush
