@@ -113,6 +113,9 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   val axiReadState = RegInit(AXI4ReadState.NOOP)
   val axiWriteState = RegInit(AXI4WriteState.NOOP)
 
+  axi_rready := 1.B
+  axi_bready := 1.B
+
   // State machine magic goes here
   switch (axiReadState) {
     is (AXI4ReadState.NOOP) {
@@ -143,9 +146,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4ReadState.RVALID) {
       // Wait for RVALID signal
-      axi_rready := 0.B
-      memport_r_ready := 0.B
-      when (M_AXI.rvalid) {
+      when (M_AXI.rvalid && M_AXI.rready) {
         axiReadState := AXI4ReadState.RREADY
       }
     }
@@ -154,9 +155,6 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // Sample everything
       memport_r_data := M_AXI.rdata
 
-      //Flag RREADY
-      axi_rready := 1.B
-      memport_r_ready := 1.B
       when (axi_arlen === 0.U) {
         axiReadState := AXI4ReadState.NOOP
       }.otherwise {
@@ -232,18 +230,15 @@ class M_AXI(axi4param: AXI4Param) extends Module {
           axiWriteState := AXI4WriteState.WVALID
         }
       }
-    }
+          axi_bready := 0.B}
 
     is (AXI4WriteState.BVALID) {
-      // Wait for bvalid
-      axi_bready := 1.B
-      when (M_AXI.bvalid) {
+      when (M_AXI.bvalid && M_AXI.bready) {
         axiWriteState := AXI4WriteState.BREADY
       }
     }
 
     is (AXI4WriteState.BREADY) {
-      axi_bready := 0.B
       memport_w_ready := 1.B
       when (memport_w.enable === 0.U) {
         axiWriteState := AXI4WriteState.NOOP
