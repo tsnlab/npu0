@@ -65,11 +65,10 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   REGMEM.addr   := regmem_addr
   REGMEM.data   := regmem_data
   REGMEM_R.addr := regmem_r_addr
-  
 
-  // TODO: Decouple 
-  axi_arready := 1.B // TODO: Control this async-y
-  axi_awready := 1.B // It should ready 
+  // TODO: Control this signals using current internal status
+  axi_arready := 1.B
+  axi_awready := 1.B
   axi_wready  := 1.B
 
   switch (axiReadState) {
@@ -103,23 +102,17 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       
       when (axi_rlen === 0.U) {
         axi_rlast := 1.B
+      } otherwise {
+        axi_rlast := 0.B
       }
-      
-      when (S_AXI.rready) {
-        axiReadState := AXI4ReadState.RREADY
-      }
-    }
 
-    is (AXI4ReadState.RREADY) {
-      // Clear RVALID
-      axi_rvalid := 0.B
-      axi_rlast  := 0.B
-
-      when (axi_rlen === 0.U) {
+      when (axi_rlen === 0.U && S_AXI.rready === 1.B) {
         axiReadState := AXI4ReadState.ARVALID
-      }.otherwise {
-        axi_rlen := axi_rlen - 1.U
-        axiReadState := AXI4ReadState.RVALID
+      } otherwise {
+        when (S_AXI.rready === 1.B) {
+          axi_rlen := axi_rlen - 1.U
+          axiReadState := AXI4ReadState.RVALID
+        }
       }
     }
   }
