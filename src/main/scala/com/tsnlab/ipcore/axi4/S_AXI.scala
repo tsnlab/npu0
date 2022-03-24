@@ -65,6 +65,12 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   REGMEM.addr   := regmem_addr
   REGMEM.data   := regmem_data
   REGMEM_R.addr := regmem_r_addr
+  
+
+  // TODO: Decouple 
+  axi_arready := 1.B // TODO: Control this async-y
+  axi_awready := 1.B // It should ready 
+  axi_wready  := 1.B
 
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
@@ -72,22 +78,17 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       // Wait for ARVLID signal form master and
       // Set ARREADY
 
-      when (S_AXI.arvalid) {
+      when (S_AXI.arvalid && S_AXI.arready) {
         // Extract required information from the bus
         axi_rlen := S_AXI.arlen
         axi_arid := S_AXI.arid
         regmem_r_addr := S_AXI.araddr
 
-        // Set ARREADY to 1
-        axi_arready := 1.B
         axiReadState := AXI4ReadState.ARREADY
       }
     }
 
     is (AXI4ReadState.ARREADY) {
-      // Turn off ARREADY
-      axi_arready := 0.B
-
       axiReadState := AXI4ReadState.RVALID
     }
 
@@ -130,21 +131,18 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       // Address Write valid
       // Wait for AWVALID signal from master and
       // set AWREADY
-      when (S_AXI.awvalid) {
+      when (S_AXI.awvalid && S_AXI.awready) {
         // Extract required information from the bus
         axi_waddr  := S_AXI.awaddr
         axi_wlen   := S_AXI.awlen
         axi_awid   := S_AXI.awid
 
         // Set AWREADY to 1
-        axi_awready := 1.B
         axiWriteState := AXI4WriteState.AWREADY
       }
     }
 
     is (AXI4WriteState.AWREADY) {
-      // Turn off AWREADY
-      axi_awready := 0.B
       // Disable write enable
       regmem_we   := 0.B
 
