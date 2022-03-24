@@ -9,6 +9,8 @@ import org.scalatest.ParallelTestExecution
 import com.tsnlab.ipcore.axi4._
 import com.tsnlab.ipcore.npu.util.BusState._
 
+object AllDone extends Exception { }
+
 class AXISlaveTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestExecution {
   val axiparam = AXI4Param (
     idWidth = 12,
@@ -29,59 +31,67 @@ class AXISlaveTest extends AnyFreeSpec with ChiselScalatestTester with ParallelT
         axislave.clock.setTimeout(65536)
 
         var arlen = 7;
-        for (i <- 1 to 4096) {
-          axislave.clock.step()
+        try {
+          for (i <- 1 to 4096) {
+            axislave.clock.step()
 
-          busmaterState match {
-            case ARVALID => {
-              axislave.S_AXI.araddr.poke("hDEADBEEF".U)
-              axislave.S_AXI.arid.poke(42.U)
-              axislave.S_AXI.arburst.poke(1.U)
-              axislave.S_AXI.arlen.poke(arlen.U)
-              axislave.S_AXI.arsize.poke(2.U)
-              axislave.S_AXI.arvalid.poke(1.B)
-              busmaterState = ARREADY
-            }
-
-            case ARREADY => {
-              // Wait for ARREADY signal
-              if (axislave.S_AXI.arready.peek().litValue == 1) {
-                // Advance to the next stage
-                axislave.S_AXI.araddr.poke("h00000000".U)
-                axislave.S_AXI.arid.poke(0.U)
-                axislave.S_AXI.arburst.poke(0.U)
-                axislave.S_AXI.arlen.poke(0.U)
-                axislave.S_AXI.arsize.poke(0.U)
-                axislave.S_AXI.arvalid.poke(0.B)
-                busmaterState = RREADY
+            busmaterState match {
+              case ARVALID => {
+                axislave.S_AXI.araddr.poke("hDEADBEEF".U)
+                axislave.S_AXI.arid.poke(42.U)
+                axislave.S_AXI.arburst.poke(1.U)
+                axislave.S_AXI.arlen.poke(arlen.U)
+                axislave.S_AXI.arsize.poke(2.U)
+                axislave.S_AXI.arvalid.poke(1.B)
+                busmaterState = ARREADY
               }
-            }
 
-            case RREADY => {
-              println("Stage RREADY")
-              axislave.S_AXI.rready.poke(true.B)
-              busmaterState = RVALID
-            }
-
-            case RVALID => {
-              println("State RVALID")
-              if (axislave.S_AXI.rvalid.peek().litValue == 1) {
-                axislave.S_AXI.rready.poke(false.B)
-                axislave.S_AXI.rid.expect(42.U)
-                
-                if (axislave.S_AXI.rlast.peek().litValue == 1) {
-                  busmaterState = NOOP
-                } else {
-                  arlen -= 1
+              case ARREADY => {
+                // Wait for ARREADY signal
+                if (axislave.S_AXI.arready.peek().litValue == 1) {
+                  // Advance to the next stage
+                  axislave.S_AXI.araddr.poke("h00000000".U)
+                  axislave.S_AXI.arid.poke(0.U)
+                  axislave.S_AXI.arburst.poke(0.U)
+                  axislave.S_AXI.arlen.poke(0.U)
+                  axislave.S_AXI.arsize.poke(0.U)
+                  axislave.S_AXI.arvalid.poke(0.B)
                   busmaterState = RREADY
                 }
               }
-            }
-            case NOOP => {
-              assert(arlen == 0)
-              // Evaluate everything
+
+              case RREADY => {
+                println("Stage RREADY")
+                axislave.S_AXI.rready.poke(true.B)
+                busmaterState = RVALID
+              }
+
+              case RVALID => {
+                println("State RVALID")
+                if (axislave.S_AXI.rvalid.peek().litValue == 1) {
+                  axislave.S_AXI.rready.poke(false.B)
+                  axislave.S_AXI.rid.expect(42.U)
+
+                  if (axislave.S_AXI.rlast.peek().litValue == 1) {
+                    busmaterState = NOOP
+                  } else {
+                    arlen -= 1
+                    busmaterState = RREADY
+                  }
+                }
+              }
+              case NOOP => {
+                assert(arlen == 0)
+                println("Test completed.")
+                throw AllDone
+                // Evaluate everything
+              }
             }
           }
+
+          throw new Exception("Invalid bus state")
+        } catch {
+          case AllDone => 
         }
       }
     }
