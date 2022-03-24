@@ -20,10 +20,11 @@
 
 ### Vivado 프로젝트 설정
 1. Vivado 프로젝트를 [다음 Notion 문서](https://www.notion.so/tsnlab/Zynq-Hello-world-75ef620c18484698bf9cf613568a48e0) 를 참조하여, 생성한다.
-2. ZYNQ IP core 를 위의 문서와는 다르게, 다음 구성으로 세팅한다.
+2. Create Block Design 이후, 꼭! Design Sources > design_1.bd (생성한 디자인 이름) 을 우클릭하여, Create HDL Wrapper 를 눌러 준다. 특별한 이유가 없다면, HDL Wrapper 를 만들 때 Vivado 가 자동으로 관리하도록 옵션을 선택한다.
+3. ZYNQ IP core 를 위의 문서와는 다르게, 다음 구성으로 세팅한다.
 ![Re-customize PS IP](./asset/img/PS-PL_config.png) 이 때 반드시 AXI Non Secure Enablement 를 1로 세팅한다.
-3. 다음 [XDC 파일](https://github.com/Digilent/digilent-xdc/blob/master/Zybo-Z7-Master.xdc)을 내려받는다
-4. 해당 파일에서 다음 부분을 주석 해제한다:
+4. 다음 [XDC 파일](https://github.com/Digilent/digilent-xdc/blob/master/Zybo-Z7-Master.xdc)을 내려받는다
+5. 해당 파일에서 다음 부분을 주석 해제한다:
 ```
 #LEDs
 set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS33} [get_ports {led[0]}]
@@ -37,15 +38,15 @@ set_property -dict {PACKAGE_PIN Y11 IOSTANDARD LVCMOS33} [get_ports led5_r]
 set_property -dict { PACKAGE_PIN T5    IOSTANDARD LVCMOS33 } [get_ports { led5_g }]; #IO_L19P_T3_13 Sch=led5_g
 set_property -dict { PACKAGE_PIN Y12   IOSTANDARD LVCMOS33 } [get_ports { led5_b }]; #IO_L20P_T3_13 Sch=led5_b
 ```
-5. 편집한 xdc 파일을 IP Integrator > Open Block Design > Constraints (right click) > Add sources 를 이용해 추가한다.
-6. 전 단계에서 빌드한 Verilog 파일 `FPUWrapper.v` 를, IP Integrator > Open Block Design > Design Sources (right click) > Add sources 를 이용해 추가한다.
-7. LED 포트를 다음 단계를 거쳐 추가한다: IP Integrator > Open Block Design > Diagram 탭 안에서 right click > Create Port
+6. 편집한 xdc 파일을 IP Integrator > Open Block Design > Constraints (right click) > Add sources 를 이용해 추가한다.
+7. 전 단계에서 빌드한 Verilog 파일 `FPUWrapper.v` 를, IP Integrator > Open Block Design > Design Sources (right click) > Add sources 를 이용해 추가한다.
+8. LED 포트를 다음 단계를 거쳐 추가한다: IP Integrator > Open Block Design > Diagram 탭 안에서 right click > Create Port
 ![led3:0](./asset/img/led-port.png)
 ![led5_r](./asset/img/led5-port.png)
-8. 다음 그림과 같이, Block diagram 을 만든다
+9. 다음 그림과 같이, Block diagram 을 만든다
 ![Blockdiagram](./asset/img/blockdiagram.png)
 해당 그림에서 NOT 게이트는 Diagram 탭 안 Right click > Add IP > Utility Vector Logic 검색 후 추가한 뒤, 생성된 블럭 더블클릭하여 Vector size 1 짜리 NOT 게이트로 설정하여 연결한다.
-9. 이후 위의 Notion 문서에 언급된 대로 보드 내보내기를 하여, 추가 과정을 진행한다. 이 때, Include Bitstream 을 하여 보드를 내보내면, Vitis 에서 한 번에 프로그램할 수 있지만, 추후 [Xilinx ILA](https://www.xilinx.com/products/intellectual-property/ila.html) 와 같은 도구를 사용해 디버깅을 해야 할 경우, Vivado 에서 별도로 비트스트림을 프로그램해야 해당 기능을 사용할 수 있다.
+10. 이후 위의 Notion 문서에 언급된 대로 보드 내보내기를 하여, 추가 과정을 진행한다. 이 때, Include Bitstream 을 하여 보드를 내보내면, Vitis 에서 한 번에 프로그램할 수 있지만, 추후 [Xilinx ILA](https://www.xilinx.com/products/intellectual-property/ila.html) 와 같은 도구를 사용해 디버깅을 해야 할 경우, Vivado 에서 별도로 비트스트림을 프로그램해야 해당 기능을 사용할 수 있다.
 
 
 ## Register map
