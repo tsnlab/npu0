@@ -113,6 +113,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   val axiReadState = RegInit(AXI4ReadState.NOOP)
   val axiWriteState = RegInit(AXI4WriteState.NOOP)
 
+  // TODO: Control this signals using current internal status
   axi_rready := 1.B
   axi_bready := 1.B
 
@@ -230,7 +231,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
           axiWriteState := AXI4WriteState.WVALID
         }
       }
-          axi_bready := 0.B}
+    }
 
     is (AXI4WriteState.BVALID) {
       when (M_AXI.bvalid && M_AXI.bready) {
