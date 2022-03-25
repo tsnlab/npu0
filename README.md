@@ -95,19 +95,20 @@ volatile float *c = (float*) malloc(sz); // Allocate sz
 Xil_DCacheFlushRange((INTPTR)a, sz);
 Xil_DCacheFlushRange((INTPTR)b, sz);
 
+// CAUTION!! 32-bit system only.
+// Replace address properly before running it on 64bit ZYNQ
 volatile uint32_t *flagreg = (uint32_t*) 0x40000000;
-volatile uint32_t *reg_a   = (uint32_t*) 0x40000004;
-volatile uint32_t *reg_b   = (uint32_t*) 0x40000008;
-volatile uint32_t *reg_c   = (uint32_t*) 0x4000000C;
+volatile uintptr_t *reg_a   = (uintptr_t*) 0x40000004;
+volatile uintptr_t *reg_b   = (uintptr_t*) 0x40000008;
+volatile uintptr_t *reg_c   = (uintptr_t*) 0x4000000C;
 
-*reg_a = (uint32_t) a;
-*reg_b = (uint32_t) b;
-*reg_c = (uint32_t) c;
+*reg_a = (uintptr_t) a;
+*reg_b = (uintptr_t) b;
+*reg_c = (uintptr_t) c;
 
 *flagreg = 0x00000001 | (0x00 << 8); // 위 테이블 참조하여 계산 opcode 설정
 
 while(!(*flagreg & 0x01));
-
 
 Xil_DCacheInvalidateRange((INTPTR)c, sz);
 
