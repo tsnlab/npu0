@@ -44,7 +44,7 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   data.y := MuxLookup(control.op, "hFFFF_FFFF".U, Array(
     0.U -> fadd.io.result,
     1.U -> fadd.io.result,
-    2.U -> fdiv.io.result,
-    3.U -> fmul.io.result,
+    2.U -> fmul.io.result,
+    3.U -> fdiv.io.result,
   ))
 }
