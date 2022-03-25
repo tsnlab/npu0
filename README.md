@@ -93,8 +93,8 @@ volatile float c __attribute__ ((aligned (4)));
 
 // Set up values on a, b, c
 // Flush
-Xil_DCacheFlushRange((INTPTR)&a, sz);
-Xil_DCacheFlushRange((INTPTR)&b, sz);
+Xil_DCacheFlushRange((INTPTR)&a, sizeof(float));
+Xil_DCacheFlushRange((INTPTR)&b, sizeof(float));
 
 // CAUTION!! 32-bit system only.
 // Replace address properly before running it on 64bit ZYNQ
@@ -111,7 +111,7 @@ volatile uintptr_t *reg_c   = (uintptr_t*) 0x4000000C;
 
 while(!(*flagreg & 0x01));
 
-Xil_DCacheInvalidateRange((INTPTR)&c, sz);
+Xil_DCacheInvalidateRange((INTPTR)&c, sizeof(float));
 
 // Grab value from C
 ```
