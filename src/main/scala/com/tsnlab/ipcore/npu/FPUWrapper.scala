@@ -12,12 +12,14 @@ import chisel3.util.MuxLookup
 import chisel3.util.Cat
 
 object FPUProcessState extends ChiselEnum {
-  val READY   = Value
-  val FETCH01   = Value
-  val FETCH02   = Value
-  val PROCESS = Value
-  val BUBBLE = Value
-  val DONE    = Value
+  val READY    = Value
+  val FETCH01A = Value
+  val FETCH01D = Value
+  val FETCH02A = Value
+  val FETCH02D = Value
+  val PROCESS  = Value
+  val BUBBLE   = Value
+  val DONE     = Value
 }
 
 class FPUWrapper(
@@ -115,28 +117,36 @@ class FPUWrapper(
     is (FPUProcessState.READY) {
       when (flagwire(0) === 1.B) {
         regvec(0) := Cat(regvec(0)(31,2), 1.B, regvec(0)(0))
-        fpuState := FPUProcessState.FETCH01
+        fpuState := FPUProcessState.FETCH01A
       }
     }
 
-    is (FPUProcessState.FETCH01) {
-      // Do data fetch
+    is (FPUProcessState.FETCH01A) {
       memport_r_addr := src1addrwire
       memport_r_enable := 1.B
+      fpuState := FPUProcessState.FETCH01D
+    }
+
+    is (FPUProcessState.FETCH01D) {
+      // Do data fetch
+      memport_r_enable := 0.B
       when (m_axi.memport_r.ready) {
         payloadbuf1 := m_axi.memport_r.data
-        memport_r_enable := 0.B
-        fpuState := FPUProcessState.FETCH02
+        fpuState := FPUProcessState.FETCH02A
       }
     }
 
-    is (FPUProcessState.FETCH02) {
-      // Do data fetch
+    is (FPUProcessState.FETCH02A) {
       memport_r_addr := src2addrwire
       memport_r_enable := 1.B
+      fpuState := FPUProcessState.FETCH02D
+    }
+
+    is (FPUProcessState.FETCH02D) {
+      // Do data fetch
+      memport_r_enable := 0.B
       when (m_axi.memport_r.ready) {
         payloadbuf2 := m_axi.memport_r.data
-        memport_r_enable := 0.B
         fpuState := FPUProcessState.PROCESS
       }
     }
