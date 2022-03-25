@@ -90,7 +90,6 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     val ready = Output(Bool())
   })
 
-  val memport_r_addr = RegInit(0.U(axi4param.addrWidth.W))
   val memport_r_data = RegInit(0.U(axi4param.dataWidth.W))
   val memport_r_ready = RegInit(0.B)
 
@@ -120,7 +119,6 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_arvalid := 0.B
       memport_r_ready := 0.B
       when (memport_r.enable) {
-        memport_r_addr := memport_r.addr
         axiReadState := AXI4ReadState.ARVALID
       }
     }
@@ -130,8 +128,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_arvalid := 1.B
       axi_arprot := 1.U
       axi_arlen := 0.U // Single beat
-      //axi_araddr := "h0020_0000".U
-      axi_araddr := memport_r_addr
+      axi_araddr := memport_r.addr
       axi_arid := 137.U
       axiReadState := AXI4ReadState.ARREADY
     }
@@ -147,6 +144,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4ReadState.RVALID) {
       // Wait for RVALID signal
       axi_rready := 0.B
+      memport_r_ready := 0.B
       when (M_AXI.rvalid) {
         axiReadState := AXI4ReadState.RREADY
       }
@@ -158,12 +156,9 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
       //Flag RREADY
       axi_rready := 1.B
+      memport_r_ready := 1.B
       when (axi_arlen === 0.U) {
-        when (memport_r.enable === 0.U) {
-          axi_rready := 0.B
-          axiReadState := AXI4ReadState.NOOP
-        }
-        memport_r_ready := 1.B
+        axiReadState := AXI4ReadState.NOOP
       }.otherwise {
         axi_arlen := axi_arlen - 1.U
         axiReadState := AXI4ReadState.RVALID
