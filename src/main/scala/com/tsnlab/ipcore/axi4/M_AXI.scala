@@ -160,6 +160,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_rready := 1.B
       when (axi_arlen === 0.U) {
         when (memport_r.enable === 0.U) {
+          axi_rready := 0.B
           axiReadState := AXI4ReadState.NOOP
         }
         memport_r_ready := 1.B
