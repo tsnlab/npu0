@@ -85,15 +85,16 @@ In A (operation) B = Y,
 
 // ...
 
-size_t sz = 8; // Modify it wisely
-float *a = (float*) malloc(sz); // Allocate sz
-float *b = (float*) malloc(sz); // Allocate sz
-volatile float *c = (float*) malloc(sz); // Allocate sz
+// Align stack variable to 4 byte offset
+// Note: Depends on hardware.
+float a __attribute__ ((aligned (4)));
+float b __attribute__ ((aligned (4)));
+volatile float c __attribute__ ((aligned (4)));
 
 // Set up values on a, b, c
 // Flush
-Xil_DCacheFlushRange((INTPTR)a, sz);
-Xil_DCacheFlushRange((INTPTR)b, sz);
+Xil_DCacheFlushRange((INTPTR)&a, sz);
+Xil_DCacheFlushRange((INTPTR)&b, sz);
 
 // CAUTION!! 32-bit system only.
 // Replace address properly before running it on 64bit ZYNQ
@@ -102,15 +103,15 @@ volatile uintptr_t *reg_a   = (uintptr_t*) 0x40000004;
 volatile uintptr_t *reg_b   = (uintptr_t*) 0x40000008;
 volatile uintptr_t *reg_c   = (uintptr_t*) 0x4000000C;
 
-*reg_a = (uintptr_t) a;
-*reg_b = (uintptr_t) b;
-*reg_c = (uintptr_t) c;
+*reg_a = (uintptr_t) &a;
+*reg_b = (uintptr_t) &b;
+*reg_c = (uintptr_t) &c;
 
 *flagreg = 0x00000001 | (0x00 << 8); // 위 테이블 참조하여 계산 opcode 설정
 
 while(!(*flagreg & 0x01));
 
-Xil_DCacheInvalidateRange((INTPTR)c, sz);
+Xil_DCacheInvalidateRange((INTPTR)&c, sz);
 
 // Grab value from C
 ```
