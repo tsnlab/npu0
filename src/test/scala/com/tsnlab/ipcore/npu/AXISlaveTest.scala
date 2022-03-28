@@ -9,8 +9,6 @@ import org.scalatest.ParallelTestExecution
 import com.tsnlab.ipcore.axi4._
 import com.tsnlab.ipcore.npu.util.BusState._
 
-object AllDone extends Exception { }
-
 class AXISlaveTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestExecution {
   val axiparam = AXI4Param (
     idWidth = 12,

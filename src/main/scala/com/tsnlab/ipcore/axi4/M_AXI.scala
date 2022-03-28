@@ -148,14 +148,16 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4ReadState.RVALID) {
       // Wait for RVALID signal
       when (M_AXI.rvalid && M_AXI.rready) {
+        // Sample everything
+        memport_r_data := M_AXI.rdata
+        memport_r_ready := 1.B
+
         axiReadState := AXI4ReadState.RREADY
       }
     }
 
     is (AXI4ReadState.RREADY) {
-      // Sample everything
-      memport_r_data := M_AXI.rdata
-
+      memport_r_ready := 0.B
       when (axi_arlen === 0.U) {
         axiReadState := AXI4ReadState.NOOP
       }.otherwise {
