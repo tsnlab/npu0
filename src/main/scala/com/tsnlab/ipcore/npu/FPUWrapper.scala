@@ -165,10 +165,13 @@ class FPUWrapper(
     }
 
     is (FPUProcessState.BUBBLE) {
-      fpuState := FPUProcessState.DONE
-      memport_w_addr := dstaddrwire
-      memport_w_data := fpu.data.y
-      memport_w_enable := 1.B
+      // wait the signal
+      when (fpu.control.o_valid) {
+        fpuState := FPUProcessState.DONE
+        memport_w_addr := dstaddrwire
+        memport_w_data := fpu.data.y
+        memport_w_enable := 1.B
+      }
     }
 
     is (FPUProcessState.DONE) {
