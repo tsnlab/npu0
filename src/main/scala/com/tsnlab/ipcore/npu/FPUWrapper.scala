@@ -109,6 +109,12 @@ class FPUWrapper(
   fpu.data.a := payloadbuf1
   fpu.data.b := payloadbuf2
   fpu.control.op := opcodewire(1,0)
+  
+  // Register def
+  val fpu_i_valid = RegInit(0.B)
+
+  fpu.control.i_valid := fpu_i_valid
+  fpu.control.o_ready := 1.B
 
   debug.led := fpuState.asUInt()
   debug.busy := regvec(0)(1)
@@ -147,20 +153,25 @@ class FPUWrapper(
       memport_r_enable := 0.B
       when (m_axi.memport_r.ready) {
         payloadbuf2 := m_axi.memport_r.data
+        fpu_i_valid := 1.B
         fpuState := FPUProcessState.PROCESS
       }
     }
 
     is (FPUProcessState.PROCESS) {
+      fpu_i_valid := 0.B
       // Bubble one cycle
       fpuState := FPUProcessState.BUBBLE
     }
 
     is (FPUProcessState.BUBBLE) {
-      fpuState := FPUProcessState.DONE
-      memport_w_addr := dstaddrwire
-      memport_w_data := fpu.data.y
-      memport_w_enable := 1.B
+      // wait the signal
+      when (fpu.control.o_valid) {
+        fpuState := FPUProcessState.DONE
+        memport_w_addr := dstaddrwire
+        memport_w_data := fpu.data.y
+        memport_w_enable := 1.B
+      }
     }
 
     is (FPUProcessState.DONE) {
