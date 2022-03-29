@@ -24,13 +24,6 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   val i_ready_reg = RegInit(1.B)
   val o_valid_reg = RegInit(1.B)
 
-  control.i_ready := MuxLookup(control.op, 1.B, Array(
-    FPUOperand.DIV -> i_ready_reg
-  ))
-  control.o_valid := MuxLookup(control.op, 1.B, Array(
-    FPUOperand.DIV -> o_valid_reg
-  ))
-
   val fadd = Module(new FADD(exponent, mantissa + 1))
   val fdiv = Module(new FDIV(exponent, mantissa + 1))
   val fmul = Module(new FMUL(exponent, mantissa + 1))
@@ -51,13 +44,20 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   fdiv.io.rm := 0.U
   fmul.io.rm := 0.U
 
-  // TODO: Wire it properly
+  // Wire control signal to fdiv value
   fdiv.io.specialIO.in_valid := MuxLookup(control.op, 0.B, Array(
     FPUOperand.DIV -> control.i_valid
   ))
   fdiv.io.specialIO.out_ready := MuxLookup(control.op, 0.B, Array(
     FPUOperand.DIV -> control.o_ready
   ))
+  control.i_ready := MuxLookup(control.op, 1.B, Array(
+    FPUOperand.DIV -> fdiv.io.specialIO.in_ready
+  ))
+  control.o_valid := MuxLookup(control.op, 1.B, Array(
+    FPUOperand.DIV -> fdiv.io.specialIO.out_valid
+  ))
+
   fdiv.io.specialIO.kill := 0.B
   fdiv.io.specialIO.isSqrt := 0.B
 

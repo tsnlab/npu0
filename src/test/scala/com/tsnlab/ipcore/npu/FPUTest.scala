@@ -8,6 +8,9 @@ import org.scalatest.freespec.AnyFreeSpec
 import com.tsnlab.ipcore.npu.FPU
 import com.tsnlab.ipcore.npu.util.FPUOperand
 
+object AllDone extends Exception { }
+object TimedOut extends Exception { }
+
 class FPUTest extends AnyFreeSpec with ChiselScalatestTester {
   // Standard IEEE-753 float
   val exponent = 8
@@ -48,6 +51,35 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester {
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
         fpu.data.y.expect("h4680_0000".U)
+      }
+    }
+  }
+
+  "FPU sanity test: division 01" in {
+    test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
+      fpu => {
+        fpu.control.op.poke(FPUOperand.DIV)
+        fpu.data.a.poke("h43000000".U)
+        fpu.data.b.poke("h43000000".U)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+
+        try {
+          for(i <- 1 to 16) { // It will end before 16 cyc.
+            fpu.clock.step()
+            if (fpu.control.o_valid.peek().litValue == 1) {
+              fpu.data.y.expect("h3f80_0000".U)
+              throw AllDone
+            }
+          }
+          throw TimedOut
+        } catch {
+          case AllDone => {
+            fpu.clock.step()
+            fpu.clock.step()
+          }
+        }
       }
     }
   }
