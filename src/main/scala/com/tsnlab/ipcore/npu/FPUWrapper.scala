@@ -121,7 +121,7 @@ class FPUWrapper(
 
   switch (fpuState) {
     is (FPUProcessState.READY) {
-      when (flagwire(0) === 1.B) {
+      when (flagwire(0) === 1.B && fpu.control.i_ready) {
         regvec(0) := Cat(regvec(0)(31,2), 1.B, regvec(0)(0))
         fpuState := FPUProcessState.FETCH01A
       }
@@ -159,7 +159,6 @@ class FPUWrapper(
     }
 
     is (FPUProcessState.PROCESS) {
-      fpu_i_valid := 0.B
       // Bubble one cycle
       fpuState := FPUProcessState.BUBBLE
     }
@@ -168,6 +167,7 @@ class FPUWrapper(
       // wait the signal
       when (fpu.control.o_valid) {
         fpuState := FPUProcessState.DONE
+        fpu_i_valid := 0.B
         memport_w_addr := dstaddrwire
         memport_w_data := fpu.data.y
         memport_w_enable := 1.B

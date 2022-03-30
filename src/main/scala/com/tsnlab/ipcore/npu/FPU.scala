@@ -1,12 +1,19 @@
 package com.tsnlab.ipcore.npu
 
 import chisel3._
+import chisel3.experimental.ChiselEnum
 import chisel3.util.{switch, is, MuxLookup}
 import fudian.{FADD,FDIV,FMUL}
 import chisel3.util.Cat
 
 import com.tsnlab.ipcore.npu.util.FPUOperand
+import com.tsnlab.ipcore.util.BitUtil
 
+object FPUState extends ChiselEnum {
+  val READY = Value
+  val PROCESS = Value
+  val DONE = Value
+}
 class FPU(exponent: Int, mantissa: Int) extends Module {
   val data = IO(new Bundle{
     val a = Input(UInt((exponent + mantissa + 1).W))
@@ -22,7 +29,7 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   })
 
   val i_ready_reg = RegInit(1.B)
-  val o_valid_reg = RegInit(1.B)
+  val o_valid_reg = RegInit(0.B)
 
   val fadd = Module(new FADD(exponent, mantissa + 1))
   val fdiv = Module(new FDIV(exponent, mantissa + 1))
@@ -51,10 +58,10 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   fdiv.io.specialIO.out_ready := MuxLookup(control.op, 0.B, Array(
     FPUOperand.DIV -> control.o_ready
   ))
-  control.i_ready := MuxLookup(control.op, 1.B, Array(
+  control.i_ready := MuxLookup(control.op, i_ready_reg, Array(
     FPUOperand.DIV -> fdiv.io.specialIO.in_ready
   ))
-  control.o_valid := MuxLookup(control.op, 1.B, Array(
+  control.o_valid := MuxLookup(control.op, o_valid_reg, Array(
     FPUOperand.DIV -> fdiv.io.specialIO.out_valid
   ))
 
@@ -67,4 +74,41 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
     FPUOperand.MUL -> fmul.io.result,
     FPUOperand.DIV -> fdiv.io.result,
   ))
+
+  // Support for decoupled clock signal
+  val state = RegInit(FPUState.READY)
+  val clkcnt = RegInit(0.U(BitUtil.getBitWidth(16).W))
+  val current_op = RegInit(FPUOperand.ADD)
+
+  val clkdelay: Int = 2;
+
+  switch (state) {
+    is (FPUState.READY) {
+      clkcnt := 0.U
+      when (control.i_valid && control.i_ready) {
+        when (control.op =/= FPUOperand.DIV) {
+          o_valid_reg := 0.B
+          i_ready_reg := 0.B
+        }
+        current_op := control.op
+        state := FPUState.PROCESS
+      } 
+    }
+
+    is (FPUState.PROCESS) {
+      when (current_op =/= FPUOperand.DIV) {
+        when (clkcnt >= (clkdelay - 1).U) {
+          o_valid_reg := 1.B
+          i_ready_reg := 1.B
+        } otherwise {
+          clkcnt := clkcnt + 1.U
+        }
+      }
+      // TODO: Implement some counter here.
+      when (control.o_valid && control.o_ready) {
+        clkcnt := 0.U
+        state := FPUState.READY
+      }
+    }
+  }
 }
