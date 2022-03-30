@@ -104,7 +104,7 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
           clkcnt := clkcnt + 1.U
         }
       }
-      // TODO: Implement some counter here.
+
       when (control.o_valid && control.o_ready) {
         clkcnt := 0.U
         state := FPUState.READY
