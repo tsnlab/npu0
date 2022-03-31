@@ -18,5 +18,4 @@ class ClockTreeTest extends AnyFreeSpec with ChiselScalatestTester{
       }
     }
   }
-  
 }
