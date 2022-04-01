@@ -98,16 +98,24 @@ class FPUWrapper(
   // Some awesome state machine to handle the fault
   // Read DRAM from bus master 
 
+  // clocktree module
+  val clktree = Module(new ClockTree())
+
   // FPU module
-  val fpu = Module(new FPU(exponent, mantissa))
+  // FPU uses 4 times slower clock, bus 200MHz, clock: 50MHz
+  val fpu = withClock(clktree.clko.div4.asClock) {
+    Module(new FPU(exponent, mantissa))
+  }
+
+  //val fpu = Module(new FPU(exponent, mantissa))
 
   val fpuState = RegInit(FPUProcessState.READY)
   
-  val payloadbuf1 = RegInit(0.U(32.W))
-  val payloadbuf2 = RegInit(0.U(32.W))
+  val fpu_data_a = RegInit(0.U(32.W))
+  val fpu_data_b = RegInit(0.U(32.W))
 
-  fpu.data.a := payloadbuf1
-  fpu.data.b := payloadbuf2
+  fpu.data.a := fpu_data_a
+  fpu.data.b := fpu_data_b
   fpu.control.op := opcodewire(1,0)
   
   // Register def
@@ -137,7 +145,7 @@ class FPUWrapper(
       // Do data fetch
       memport_r_enable := 0.B
       when (m_axi.memport_r.ready) {
-        payloadbuf1 := m_axi.memport_r.data
+        fpu_data_a := m_axi.memport_r.data
         fpuState := FPUProcessState.FETCH02A
       }
     }
@@ -152,7 +160,7 @@ class FPUWrapper(
       // Do data fetch
       memport_r_enable := 0.B
       when (m_axi.memport_r.ready) {
-        payloadbuf2 := m_axi.memport_r.data
+        fpu_data_b := m_axi.memport_r.data
         fpu_i_valid := 1.B
         fpuState := FPUProcessState.PROCESS
       }
