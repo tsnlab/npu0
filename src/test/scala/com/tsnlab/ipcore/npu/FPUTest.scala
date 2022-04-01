@@ -37,6 +37,9 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester {
   "FPU Sanity test: addition 01" in {
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step();
+        }
         fpu.control.op.poke(FPUOperand.ADD)
         fpu.control.i_valid.poke(1.B)
         fpu.control.i_ready.expect(1.B)
@@ -52,6 +55,9 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester {
   "FPU Sanity test: subtraction 01" in {
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step();
+        }
         fpu.control.op.poke(FPUOperand.SUB)
         fpu.control.i_valid.poke(1.B)
         fpu.control.i_ready.expect(1.B)
@@ -67,6 +73,9 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester {
   "FPU sanity test: multiply 01" in {
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step();
+        }
         fpu.control.op.poke(FPUOperand.MUL)
         fpu.control.i_valid.poke(1.B)
         fpu.control.i_ready.expect(1.B)
