@@ -5,11 +5,12 @@ import chisel3.tester.testableClock
 import chiseltest.{ChiselScalatestTester, testableUInt}
 import chiseltest.simulator.WriteVcdAnnotation
 import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.ParallelTestExecution
 import com.tsnlab.ipcore.axi4._
 import com.tsnlab.ipcore.npu.util.BusState._
 
 // Most tests are AXI4 compatible, does not fully test AXI3 yet
-class AXIMasterTest extends AnyFreeSpec with ChiselScalatestTester {
+class AXIMasterTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestExecution {
   val axiparam = AXI4Param (
     idWidth = 12,
     addrWidth = 32,

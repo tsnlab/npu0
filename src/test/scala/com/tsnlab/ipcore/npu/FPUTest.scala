@@ -5,13 +5,14 @@ import chisel3.tester.testableClock
 import chiseltest.{ChiselScalatestTester, testableUInt}
 import chiseltest.simulator.WriteVcdAnnotation
 import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.ParallelTestExecution
 import com.tsnlab.ipcore.npu.FPU
 import com.tsnlab.ipcore.npu.util.FPUOperand
 
 object AllDone extends Exception { }
 object TimedOut extends Exception { }
 
-class FPUTest extends AnyFreeSpec with ChiselScalatestTester {
+class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestExecution {
   // Standard IEEE-753 float
   val exponent = 8
   val mantissa = 23
