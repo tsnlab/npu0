@@ -85,10 +85,10 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   switch (state) {
     is (FPUState.READY) {
       clkcnt := 0.U
+      i_ready_reg := 1.B
       when (control.i_valid && control.i_ready) {
         when (control.op =/= FPUOperand.DIV) {
           o_valid_reg := 0.B
-          i_ready_reg := 0.B
         }
         current_op := control.op
         state := FPUState.PROCESS
@@ -102,6 +102,7 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
           i_ready_reg := 1.B
         } otherwise {
           clkcnt := clkcnt + 1.U
+          i_ready_reg := 0.B
         }
       }
 
