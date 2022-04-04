@@ -157,18 +157,19 @@ class S_AXI(axi4param: AXI4Param) extends Module {
         // Write is valid.
         // Turn on WREADY
         axi_wready := 1.B
+
+        // Fetch data from the bus
+        // ... and write it to gpio_reg
+        regmem_we   := 1.B
+        regmem_addr := axi_waddr
+        regmem_data := S_AXI.wdata
+
         // Proceed to next state
         axiWriteState := AXI4WriteState.WREADY
       }
     }
 
     is (AXI4WriteState.WREADY) {
-      // Fetch data from the bus
-      // ... and write it to gpio_reg
-      regmem_we   := 1.B
-      regmem_addr := axi_waddr
-      regmem_data := S_AXI.wdata
-
       // Turn off WREADY
       axi_wready := 0.B
 
