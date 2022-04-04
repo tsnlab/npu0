@@ -103,7 +103,7 @@ class FPUWrapper(
 
   // FPU module
   // FPU uses 4 times slower clock, bus 200MHz, clock: 50MHz
-  val fpu = withClock(clktree.clko.div4.asClock) {
+  val fpu = withClockAndReset(clktree.clko.div4.asClock, clktree.clko.rst4) {
     Module(new FPU(exponent, mantissa))
   }
 
