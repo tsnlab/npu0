@@ -87,9 +87,9 @@ In A (operation) B = Y,
 
 // Align stack variable to 4 byte offset
 // Note: Depends on hardware.
-float a __attribute__ ((aligned (4)));
-float b __attribute__ ((aligned (4)));
-volatile float c __attribute__ ((aligned (4)));
+float a __attribute__ ((aligned (8)));
+float b __attribute__ ((aligned (8)));
+volatile float c __attribute__ ((aligned (8)));
 
 // Set up values on a, b, c
 // Flush
