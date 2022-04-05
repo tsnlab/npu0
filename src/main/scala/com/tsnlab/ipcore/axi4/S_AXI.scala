@@ -66,28 +66,28 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   REGMEM.data   := regmem_data
   REGMEM_R.addr := regmem_r_addr
 
+  // TODO: Control this signals using current internal status
+  axi_arready := 1.B
+  axi_awready := 1.B
+  axi_wready  := 1.B
+
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
       // Address Read valid
       // Wait for ARVLID signal form master and
       // Set ARREADY
 
-      when (S_AXI.arvalid) {
+      when (S_AXI.arvalid && S_AXI.arready) {
         // Extract required information from the bus
         axi_rlen := S_AXI.arlen
         axi_arid := S_AXI.arid
         regmem_r_addr := S_AXI.araddr
 
-        // Set ARREADY to 1
-        axi_arready := 1.B
         axiReadState := AXI4ReadState.ARREADY
       }
     }
 
     is (AXI4ReadState.ARREADY) {
-      // Turn off ARREADY
-      axi_arready := 0.B
-
       axiReadState := AXI4ReadState.RVALID
     }
 
@@ -102,23 +102,17 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       
       when (axi_rlen === 0.U) {
         axi_rlast := 1.B
+      } otherwise {
+        axi_rlast := 0.B
       }
-      
-      when (S_AXI.rready) {
-        axiReadState := AXI4ReadState.RREADY
-      }
-    }
 
-    is (AXI4ReadState.RREADY) {
-      // Clear RVALID
-      axi_rvalid := 0.B
-      axi_rlast  := 0.B
-
-      when (axi_rlen === 0.U) {
+      when (axi_rlen === 0.U && S_AXI.rready === 1.B) {
         axiReadState := AXI4ReadState.ARVALID
-      }.otherwise {
-        axi_rlen := axi_rlen - 1.U
-        axiReadState := AXI4ReadState.RVALID
+      } otherwise {
+        when (S_AXI.rready === 1.B) {
+          axi_rlen := axi_rlen - 1.U
+          axiReadState := AXI4ReadState.RVALID
+        }
       }
     }
   }
@@ -130,21 +124,18 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       // Address Write valid
       // Wait for AWVALID signal from master and
       // set AWREADY
-      when (S_AXI.awvalid) {
+      when (S_AXI.awvalid && S_AXI.awready) {
         // Extract required information from the bus
         axi_waddr  := S_AXI.awaddr
         axi_wlen   := S_AXI.awlen
         axi_awid   := S_AXI.awid
 
         // Set AWREADY to 1
-        axi_awready := 1.B
         axiWriteState := AXI4WriteState.AWREADY
       }
     }
 
     is (AXI4WriteState.AWREADY) {
-      // Turn off AWREADY
-      axi_awready := 0.B
       // Disable write enable
       regmem_we   := 0.B
 
