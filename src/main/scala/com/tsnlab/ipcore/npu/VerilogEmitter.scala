@@ -9,9 +9,9 @@ import com.tsnlab.ipcore.axi4.AXIVariant
 object VerilogEmitter extends App {
   // Configure the IP using some values
   val axi4MasterParam = AXI4Param (
-    idWidth = 6,
+    idWidth = 3,
     addrWidth = 32,
-    dataWidth = 32,
+    dataWidth = 64,
     awuserWidth = 2,
     aruserWidth = 2,
     wuserWidth = 0,
