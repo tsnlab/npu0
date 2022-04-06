@@ -16,17 +16,20 @@ object AXIVariant extends Enumeration {
 
 import AXIVariant.AXIVariant
 
+case class AXIUserConfig (
+  awuser: Int,
+  aruser: Int,
+  wuser: Int,
+  ruser: Int,
+  buser: Int,
+)
 
 // TODO: Implement assertation
 case class AXI4Param (
   idWidth: Int,
   addrWidth: Int,
   dataWidth: Int,
-  awuserWidth: Int,
-  aruserWidth: Int,
-  wuserWidth: Int,
-  ruserWidth: Int,
-  buserWidth: Int,
+  userWidth: Option[AXIUserConfig],
   busvariant: AXIVariant,
 ) {
   def getBurstWidth(): Width = {

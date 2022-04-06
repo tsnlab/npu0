@@ -15,11 +15,7 @@ class AXIMasterTest extends AnyFreeSpec with ChiselScalatestTester with Parallel
     idWidth = 12,
     addrWidth = 32,
     dataWidth = 32,
-    awuserWidth = 2,
-    aruserWidth = 2,
-    wuserWidth = 0,
-    ruserWidth = 0,
-    buserWidth = 0,
+    userWidth = None,
     busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 

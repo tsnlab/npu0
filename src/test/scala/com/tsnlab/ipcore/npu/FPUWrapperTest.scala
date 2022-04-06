@@ -14,11 +14,7 @@ class FPUWrapperTest extends AnyFreeSpec with ChiselScalatestTester with Paralle
     idWidth = 6,
     addrWidth = 32,
     dataWidth = 32,
-    awuserWidth = 2,
-    aruserWidth = 2,
-    wuserWidth = 0,
-    ruserWidth = 0,
-    buserWidth = 0,
+    userWidth = None,
     busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 
@@ -26,11 +22,7 @@ class FPUWrapperTest extends AnyFreeSpec with ChiselScalatestTester with Paralle
     idWidth = 12,
     addrWidth = 32,
     dataWidth = 32,
-    awuserWidth = 2,
-    aruserWidth = 2,
-    wuserWidth = 0,
-    ruserWidth = 0,
-    buserWidth = 0,
+    userWidth = None,
     busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 

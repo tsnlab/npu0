@@ -1,10 +1,62 @@
 package com.tsnlab.ipcore.axi4.io
 
 import chisel3._
-import com.tsnlab.ipcore.axi4.AXI4Param
-import com.tsnlab.ipcore.axi4.AXIVariant
+import com.tsnlab.ipcore.axi4.{AXI4Param, AXIVariant, AXIUserConfig}
 
 // NOTE: Reference doc: http://www.gstitt.ece.ufl.edu/courses/fall15/eel4720_5721/labs/refs/AXI4_specification.pdf
+
+object BusType extends Enumeration {
+  type BusType = Value
+  val M_AW     = Value
+  val M_AR     = Value
+  val M_W      = Value
+  val M_R      = Value
+  val M_B      = Value
+  val S_AW     = Value
+  val S_AR     = Value
+  val S_W      = Value
+  val S_R      = Value
+  val S_B      = Value
+}
+
+import BusType.BusType
+
+object BusDir extends Enumeration {
+  type BusDir = Value
+  val In      = Value
+  val Out     = Value
+}
+
+import BusDir.BusDir
+
+object AXIIOHelper {
+  def getUserBus(busType: BusType, config: Option[AXIUserConfig]) = {
+    config match {
+      case Some(user: AXIUserConfig) => {
+        val (busWidth: Int, busDir: BusDir) = busType match {
+          case BusType.M_AW => (user.awuser, BusDir.Out)
+          case BusType.S_AW => (user.awuser, BusDir.In)
+          case BusType.M_AR => (user.aruser, BusDir.Out)
+          case BusType.S_AR => (user.aruser, BusDir.In)
+          case BusType.M_W  => (user.wuser, BusDir.Out)
+          case BusType.S_W  => (user.wuser, BusDir.In)
+          case BusType.M_R  => (user.ruser, BusDir.In)
+          case BusType.S_R  => (user.ruser, BusDir.Out)
+          case BusType.M_B  => (user.buser, BusDir.In)
+          case BusType.S_B  => (user.buser, BusDir.Out)
+        }
+
+        if (busWidth > 0) {
+          busDir match {
+            case BusDir.In => Input(UInt(busWidth.W))
+            case BusDir.Out => Output(UInt(busWidth.W))
+          }
+        }
+      }
+      case None => {}
+    }
+  }
+}
 
 class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   // AXI4 Master IO
@@ -24,6 +76,7 @@ class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   val awqos   = Output(UInt(4.W)) // See A8.1.1
   val awvalid = Output(Bool())
   val awready = Input(Bool())
+  val awuser  = AXIIOHelper.getUserBus(BusType.M_AW, param.userWidth)
 
   // W channel
   val wdata   = Output(UInt(param.dataWidth.W))
@@ -35,6 +88,7 @@ class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   val wid = if (param.busvariant == AXIVariant.AXI3) {
     Output(UInt(param.idWidth.W))
   }
+  val wuser  = AXIIOHelper.getUserBus(BusType.M_W, param.userWidth)
 
   // AR channel
   val araddr  = Output(UInt(param.addrWidth.W))
@@ -48,6 +102,7 @@ class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   val arqos   = Output(UInt(4.W)) // See A8.1.1
   val arvalid = Output(Bool())
   val arready = Input(Bool())
+  val aruser  = AXIIOHelper.getUserBus(BusType.M_AR, param.userWidth)
 
   // R channel
   val rdata   = Input(UInt(param.dataWidth.W))
@@ -80,6 +135,7 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   val awqos   = Input(UInt(4.W)) // See A8.1.1
   val awvalid = Input(Bool())
   val awready = Output(Bool())
+  val awuser  = AXIIOHelper.getUserBus(BusType.S_AW, param.userWidth)
 
   // W channel
   val wdata   = Input(UInt(param.dataWidth.W))
@@ -91,6 +147,7 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   if (param.busvariant == AXIVariant.AXI3) {
     val wid   = Input(UInt(param.idWidth.W))
   }
+  val wuser  = AXIIOHelper.getUserBus(BusType.S_W, param.userWidth)
 
   // AR channel
   val araddr  = Input(UInt(param.addrWidth.W))
@@ -104,6 +161,7 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   val arqos   = Input(UInt(4.W)) // See A8.1.1
   val arvalid = Input(Bool())
   val arready = Output(Bool())
+  val aruser  = AXIIOHelper.getUserBus(BusType.S_AR, param.userWidth)
 
   // R channel
   val rdata   = Output(UInt(param.dataWidth.W))
@@ -111,12 +169,14 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   val rlast   = Output(Bool())
   val rvalid  = Output(Bool())
   val rready  = Input(Bool())
+  val ruser  = AXIIOHelper.getUserBus(BusType.S_R, param.userWidth)
 
   // B channel
   val bid     = Output(UInt(param.idWidth.W))
   val bresp   = Output(UInt(2.W)) // TODO: Read the AXI4 spec
   val bvalid  = Output(Bool())
   val bready  = Input(Bool())
+  val buser  = AXIIOHelper.getUserBus(BusType.S_B, param.userWidth)
 }
 
 //class AXI_AWID
