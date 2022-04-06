@@ -12,14 +12,15 @@ object VerilogEmitter extends App {
     idWidth = 3,
     addrWidth = 32,
     dataWidth = 64,
-    //userWidth = Some(AXIUserConfig(
-    //  awuser = 5,
-    //  aruser = 5,
-    //  wuser  = 0,
-    //  ruser  = 0,
-    //  buser  = 0,
-    //)),
-    userWidth = None,
+    userWidth = AXIUserConfig(
+      //awuser = 5,
+      //aruser = 5,
+      awuser = 0,
+      aruser = 0,
+      wuser  = 0,
+      ruser  = 0,
+      buser  = 0,
+    ),
     busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 
@@ -27,7 +28,13 @@ object VerilogEmitter extends App {
     idWidth = 12,
     addrWidth = 32,
     dataWidth = 32,
-    userWidth = None,
+    userWidth = AXIUserConfig(
+      awuser = 0,
+      aruser = 0,
+      wuser  = 0,
+      ruser  = 0,
+      buser  = 0,
+    ),
     busvariant = AXIVariant.AXI3, // ZYNQ-7000 Uses AXI3
   )
 

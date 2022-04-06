@@ -30,30 +30,25 @@ object BusDir extends Enumeration {
 import BusDir.BusDir
 
 object AXIIOHelper {
-  def getUserBus(busType: BusType, config: Option[AXIUserConfig]) = {
-    config match {
-      case Some(user: AXIUserConfig) => {
-        val (busWidth: Int, busDir: BusDir) = busType match {
-          case BusType.M_AW => (user.awuser, BusDir.Out)
-          case BusType.S_AW => (user.awuser, BusDir.In)
-          case BusType.M_AR => (user.aruser, BusDir.Out)
-          case BusType.S_AR => (user.aruser, BusDir.In)
-          case BusType.M_W  => (user.wuser, BusDir.Out)
-          case BusType.S_W  => (user.wuser, BusDir.In)
-          case BusType.M_R  => (user.ruser, BusDir.In)
-          case BusType.S_R  => (user.ruser, BusDir.Out)
-          case BusType.M_B  => (user.buser, BusDir.In)
-          case BusType.S_B  => (user.buser, BusDir.Out)
-        }
+  def getUserBus(busType: BusType, config: AXIUserConfig) = {
+    val (busWidth: Int, busDir: BusDir) = busType match {
+      case BusType.M_AW => (config.awuser, BusDir.Out)
+      case BusType.S_AW => (config.awuser, BusDir.In)
+      case BusType.M_AR => (config.aruser, BusDir.Out)
+      case BusType.S_AR => (config.aruser, BusDir.In)
+      case BusType.M_W  => (config.wuser, BusDir.Out)
+      case BusType.S_W  => (config.wuser, BusDir.In)
+      case BusType.M_R  => (config.ruser, BusDir.In)
+      case BusType.S_R  => (config.ruser, BusDir.Out)
+      case BusType.M_B  => (config.buser, BusDir.In)
+      case BusType.S_B  => (config.buser, BusDir.Out)
+    }
 
-        if (busWidth > 0) {
-          busDir match {
-            case BusDir.In => Input(UInt(busWidth.W))
-            case BusDir.Out => Output(UInt(busWidth.W))
-          }
-        }
+    if (busWidth > 0) {
+      busDir match {
+        case BusDir.In => Input(UInt(busWidth.W))
+        case BusDir.Out => Output(UInt(busWidth.W))
       }
-      case None => {}
     }
   }
 }

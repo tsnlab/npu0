@@ -29,7 +29,7 @@ case class AXI4Param (
   idWidth: Int,
   addrWidth: Int,
   dataWidth: Int,
-  userWidth: Option[AXIUserConfig],
+  userWidth: AXIUserConfig,
   busvariant: AXIVariant,
 ) {
   def getBurstWidth(): Width = {
