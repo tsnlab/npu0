@@ -13,10 +13,8 @@ object VerilogEmitter extends App {
     addrWidth = 32,
     dataWidth = 64,
     userWidth = AXIUserConfig(
-      //awuser = 5,
-      //aruser = 5,
-      awuser = 0,
-      aruser = 0,
+      awuser = 5,
+      aruser = 5,
       wuser  = 0,
       ruser  = 0,
       buser  = 0,

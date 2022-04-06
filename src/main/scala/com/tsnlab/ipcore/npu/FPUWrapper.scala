@@ -48,6 +48,7 @@ class FPUWrapper(
   val memport_r_enable = RegInit(0.B)
   m_axi.memport_r.addr := memport_r_addr
   m_axi.memport_r.enable := memport_r_enable
+  m_axi.memport_r.cache := "b0010".U
 
   val memport_w_addr = RegInit(0.U(32.W))  
   val memport_w_data = RegInit(0.U(32.W))
@@ -55,7 +56,16 @@ class FPUWrapper(
   m_axi.memport_w.addr := memport_w_addr
   m_axi.memport_w.data := memport_w_data
   m_axi.memport_w.enable := memport_w_enable
+  m_axi.memport_w.cache := "b0010".U
 
+  m_axi.axiuser.ar match {
+    case ar: UInt => ar := "b00001".U
+    case _ => {}
+  }
+  m_axi.axiuser.aw match {
+    case aw: UInt => aw := "b00001".U
+    case _ => {}
+  }
 
   // Define our tiny tiny cute MMIO register.
   val regvec = RegInit(VecInit(Seq.fill(4)(0.U(axi4SlaveParam.dataWidth.W))))

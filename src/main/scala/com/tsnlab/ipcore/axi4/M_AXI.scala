@@ -86,6 +86,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   val memport_r = IO(new Bundle {
     val addr = Input(UInt(axi4param.addrWidth.W))
     val data = Output(UInt(axi4param.dataWidth.W))
+    val cache = Input(UInt(4.W))
     val enable = Input(Bool())
     val ready = Output(Bool())
   })
@@ -99,6 +100,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   val memport_w = IO(new Bundle {
     val addr = Input(UInt(axi4param.addrWidth.W))
     val data = Input(UInt(axi4param.dataWidth.W))
+    val cache = Input(UInt(4.W))
     val enable = Input(Bool())
     val ready = Output(Bool())
   })
@@ -151,6 +153,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_arprot := 1.U
       axi_arlen := 0.U // Single beat
       axi_araddr := memport_r.addr
+      axi_arcache := memport_r.cache
       axi_arid := 137.U
       axiReadState := AXI4ReadState.ARREADY
     }
@@ -204,6 +207,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // rise AWVALID
       axi_awvalid := 1.B
       axi_awaddr := memport_w_addr
+      axi_awcache := memport_w.cache
       axi_awid := 137.U
       axi_awlen := 0.U
       axi_awprot := 1.U
