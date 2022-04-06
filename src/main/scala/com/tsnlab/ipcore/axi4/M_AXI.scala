@@ -109,6 +109,24 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
   memport_w.ready := memport_w_ready
 
+  val axiuser = IO(new Bundle {
+    val ar = if (axi4param.userWidth.aruser > 0) {
+      Input(UInt(axi4param.userWidth.aruser.W))
+    }
+    val aw = if (axi4param.userWidth.awuser > 0) {
+      Input(UInt(axi4param.userWidth.awuser.W))
+    }
+  })
+
+  M_AXI.aruser match {
+    case aruser: UInt => aruser := axiuser.ar.asInstanceOf[UInt]
+    case _ => {}
+  }
+  M_AXI.awuser match {
+    case awuser: UInt => awuser := axiuser.aw.asInstanceOf[UInt]
+    case _ => {}
+  }
+
   // State machine registers
   val axiReadState = RegInit(AXI4ReadState.NOOP)
   val axiWriteState = RegInit(AXI4WriteState.NOOP)
