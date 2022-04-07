@@ -150,7 +150,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4ReadState.ARVALID) {
       // set up address and rise ARVALID
       axi_arvalid := 1.B
-      axi_arprot := 1.U
+      //axi_arprot := 1.U
+      axi_arprot := "b011".U
       axi_arlen := 0.U // Single beat
       axi_araddr := memport_r.addr
       axi_arcache := memport_r.cache
@@ -210,7 +211,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_awcache := memport_w.cache
       axi_awid := 137.U
       axi_awlen := 0.U
-      axi_awprot := 1.U
+      //axi_awprot := 1.U
+      axi_awprot := "b011".U
       axi_awburst := 1.U // INCR
 
       axiWriteState := AXI4WriteState.AWREADY
@@ -226,7 +228,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4WriteState.WVALID) {
       // TODO: FIXME
       // Always send 0b1111 on wstrb (all 4 bytes are valid)
-      axi_wstrb := "hFF".U
+      //axi_wstrb := "hFF".U
+      axi_wstrb := "hF0".U // Lower 4 byte is valid.
 
       // AXI3 specific but write value to it anyway
       // FIRRTL optimizer will strip out register

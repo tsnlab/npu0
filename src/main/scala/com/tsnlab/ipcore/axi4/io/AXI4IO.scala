@@ -102,6 +102,7 @@ class AXI4MasterBundle(param: AXI4Param) extends Bundle {
   // R channel
   val rdata   = Input(UInt(param.dataWidth.W))
   val rid     = Input(UInt(param.idWidth.W))
+  val rresp   = Input(UInt(2.W))
   val rlast   = Input(Bool())
   val rvalid  = Input(Bool())
   val rready  = Output(Bool())
@@ -161,6 +162,7 @@ class AXI4SlaveBundle(param: AXI4Param) extends Bundle {
   // R channel
   val rdata   = Output(UInt(param.dataWidth.W))
   val rid     = Output(UInt(param.idWidth.W))
+  val rresp   = Output(UInt(2.W))
   val rlast   = Output(Bool())
   val rvalid  = Output(Bool())
   val rready  = Input(Bool())

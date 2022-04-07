@@ -46,6 +46,8 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   S_AXI.bid     := axi_bid
   S_AXI.bresp   := axi_bresp
 
+  S_AXI.rresp   := "b00".U // OKAY
+
   // AXI address registers
   val axi_raddr  = RegInit(0.U(axi4param.addrWidth.W))
   val axi_waddr  = RegInit(0.U(axi4param.addrWidth.W))
@@ -69,7 +71,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
   // TODO: Control this signals using current internal status
   axi_arready := 1.B
   axi_awready := 1.B
-  axi_wready  := 1.B
+  //axi_wready  := 1.B
 
   switch (axiReadState) {
     is (AXI4ReadState.ARVALID) {
