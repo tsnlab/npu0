@@ -150,7 +150,6 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     is (AXI4ReadState.ARVALID) {
       // set up address and rise ARVALID
       axi_arvalid := 1.B
-      //axi_arprot := 1.U
       //axi_arsize := "h2".U // 32-bit
       axi_arsize := "h3".U // 64-bit
       axi_arprot := "b001".U
@@ -214,7 +213,6 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_awcache := memport_w.cache
       axi_awid := 137.U
       axi_awlen := 0.U
-      //axi_awprot := 1.U
       axi_awprot := "b001".U
       axi_awburst := 1.U // INCR
 
