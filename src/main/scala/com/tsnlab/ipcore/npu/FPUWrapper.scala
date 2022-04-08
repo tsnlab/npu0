@@ -18,7 +18,6 @@ object FPUProcessState extends ChiselEnum {
   val FETCH02A = Value
   val FETCH02D = Value
   val PROCESS  = Value
-  val BUBBLE   = Value
   val DONE     = Value
 }
 
@@ -177,11 +176,6 @@ class FPUWrapper(
     }
 
     is (FPUProcessState.PROCESS) {
-      // Bubble one cycle
-      fpuState := FPUProcessState.BUBBLE
-    }
-
-    is (FPUProcessState.BUBBLE) {
       // wait the signal
       when (fpu.control.o_valid) {
         fpuState := FPUProcessState.DONE
