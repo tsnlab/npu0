@@ -78,6 +78,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       // Address Read valid
       // Wait for ARVLID signal form master and
       // Set ARREADY
+      axi_rvalid := 0.B
 
       when (S_AXI.arvalid && S_AXI.arready) {
         // Extract required information from the bus
@@ -85,7 +86,8 @@ class S_AXI(axi4param: AXI4Param) extends Module {
         axi_arid := S_AXI.arid
         regmem_r_addr := S_AXI.araddr
 
-        axiReadState := AXI4ReadState.ARREADY
+        //axiReadState := AXI4ReadState.ARREADY
+        axiReadState := AXI4ReadState.RVALID
       }
     }
 
