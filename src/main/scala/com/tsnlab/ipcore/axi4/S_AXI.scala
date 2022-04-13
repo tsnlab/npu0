@@ -86,16 +86,12 @@ class S_AXI(axi4param: AXI4Param) extends Module {
         axi_arid := S_AXI.arid
         regmem_r_addr := S_AXI.araddr
 
-        //axiReadState := AXI4ReadState.ARREADY
-        axiReadState := AXI4ReadState.RVALID
+        axiReadState := AXI4ReadState.ARREADY
+        //axiReadState := AXI4ReadState.RVALID
       }
     }
 
     is (AXI4ReadState.ARREADY) {
-      axiReadState := AXI4ReadState.RVALID
-    }
-
-    is (AXI4ReadState.RVALID) {
       // Set up return data
       axi_rid := axi_arid
       // TODO: set up rresp
@@ -110,11 +106,18 @@ class S_AXI(axi4param: AXI4Param) extends Module {
         axi_rlast := 0.B
       }
 
-      when (axi_rlen === 0.U && S_AXI.rready === 1.B) {
-        axiReadState := AXI4ReadState.ARVALID
-      } otherwise {
-        when (S_AXI.rready === 1.B) {
+      axiReadState := AXI4ReadState.RVALID
+    }
+
+    is (AXI4ReadState.RVALID) {
+      when (S_AXI.rready === 1.B) {
+        axi_rvalid := 0.B
+        when (axi_rlen === 0.U) {
+          axiReadState := AXI4ReadState.ARVALID
+        } otherwise {
           axi_rlen := axi_rlen - 1.U
+          // TODO: Implement 64-bit operation switch
+          regmem_r_addr := regmem_r_addr + 4.U // TODO: FIXME
           axiReadState := AXI4ReadState.RVALID
         }
       }
