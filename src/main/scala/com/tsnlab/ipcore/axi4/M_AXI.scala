@@ -8,6 +8,10 @@ import com.tsnlab.ipcore.axi4.io.AXI4MasterBundle
 
 // ARM AXI High Performance interface (master)
 class M_AXI(axi4param: AXI4Param) extends Module {
+  // Configuration
+  val wid = 3
+  val rid = 2
+
   val M_AXI = IO(new AXI4MasterBundle(axi4param))
 
   // AW channel
@@ -63,6 +67,15 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   val axi_arid    = RegInit(0.U(axi4param.idWidth.W))
   val axi_arqos   = RegInit(0.U(4.W)) // See A8.1.1
   val axi_arvalid = RegInit(0.B)
+
+  val axi_aruser  = M_AXI.aruser match {
+    case _: UInt => RegInit(0.U(axi4param.userWidth.aruser.W))
+    case _ => {}
+  }
+  val axi_awuser  = M_AXI.awuser match {
+    case _: UInt => RegInit(0.U(axi4param.userWidth.awuser.W))
+    case _ => {}
+  }
 
   M_AXI.araddr   := axi_araddr
   M_AXI.arlen    := axi_arlen
@@ -121,11 +134,13 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   })
 
   M_AXI.aruser match {
-    case aruser: UInt => aruser := axiuser.ar.asInstanceOf[UInt]
+    case aruser: UInt => aruser := axi_aruser.asInstanceOf[chisel3.Data]
+    //axiuser.ar.asInstanceOf[UInt]
     case _ => {}
   }
   M_AXI.awuser match {
-    case awuser: UInt => awuser := axiuser.aw.asInstanceOf[UInt]
+    case awuser: UInt => awuser := axi_awuser.asInstanceOf[chisel3.Data]
+    //axiuser.aw.asInstanceOf[UInt]
     case _ => {}
   }
 
@@ -156,7 +171,15 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_arlen := 0.U // Single beat
       axi_araddr := memport_r.addr
       axi_arcache := memport_r.cache
-      axi_arid := 137.U
+      axi_arid := rid.U
+      axi_arburst := 1.U // INCR
+
+      // Handle user signal
+      axi_aruser match {
+        case aruser: Data => aruser := axiuser.ar.asInstanceOf[UInt]
+        case _ => {}
+      }
+
       axiReadState := AXI4ReadState.ARREADY
     }
 
@@ -211,10 +234,16 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_awvalid := 1.B
       axi_awaddr := memport_w_addr
       axi_awcache := memport_w.cache
-      axi_awid := 137.U
+      axi_awid := wid.U
       axi_awlen := 0.U
       axi_awprot := "b001".U
       axi_awburst := 1.U // INCR
+
+      // Handle user signal
+      axi_awuser match {
+        case awuser: Data => awuser := axiuser.aw.asInstanceOf[UInt]
+        case _ => {}
+      }
 
       axiWriteState := AXI4WriteState.AWREADY
     }
@@ -235,7 +264,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       // AXI3 specific but write value to it anyway
       // FIRRTL optimizer will strip out register
       // when it thinks it is not needed.
-      axi_wid := 137.U
+      axi_wid := wid.U
       // TODO: Wait for the data and rise WVALID
       axi_wdata := memport_w_data
       axi_wvalid := 1.B
