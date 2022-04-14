@@ -97,7 +97,7 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
 
     is (FPUState.PROCESS) {
       when (current_op =/= FPUOperand.DIV) {
-        when (clkcnt >= (clkdelay - 1).U) {
+        when (clkcnt >= clkdelay.U) {
           o_valid_reg := 1.B
           i_ready_reg := 1.B
         } otherwise {
@@ -107,7 +107,6 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
       }
 
       when (control.o_valid && control.o_ready) {
-        clkcnt := 0.U
         state := FPUState.READY
       }
     }
