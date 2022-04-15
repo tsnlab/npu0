@@ -19,6 +19,10 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
 
   def fpuTestHelper(fpu: FPU, answer: UInt) = {
     try {
+      var nextval = fpu.control.op.peek().litValue + 1;
+      if (nextval >= 4) nextval = 0
+      fpu.control.op.poke(nextval)
+      fpu.control.i_valid.poke(0.B)
       for(i <- 1 to 16) { // It will end before 16 cyc.
         fpu.clock.step()
         if (fpu.control.o_valid.peek().litValue == 1) {
@@ -47,6 +51,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.o_ready.poke(1.B)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
+        fpu.clock.step();
 
         fpuTestHelper(fpu, "h4380_0000".U)
       }
@@ -65,6 +70,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.o_ready.poke(1.B)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
+        fpu.clock.step();
 
         fpuTestHelper(fpu, "h0000_0000".U)
       }
@@ -83,6 +89,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.o_ready.poke(1.B)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
+        fpu.clock.step();
 
         fpuTestHelper(fpu, "h4680_0000".U)
       }
@@ -92,12 +99,16 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
   "FPU sanity test: division 01" in {
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step();
+        }
         fpu.control.op.poke(FPUOperand.DIV)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
         fpu.control.i_valid.poke(1.B)
         fpu.control.o_ready.poke(1.B)
         fpu.control.i_ready.expect(1.B)
+        fpu.clock.step();
 
         fpuTestHelper(fpu, "h3f80_0000".U)
       }
