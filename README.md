@@ -23,7 +23,7 @@
 2. Create Block Design 이후, 꼭! Design Sources > design_1.bd (생성한 디자인 이름) 을 우클릭하여, Create HDL Wrapper 를 눌러 준다. 특별한 이유가 없다면, HDL Wrapper 를 만들 때 Vivado 가 자동으로 관리하도록 옵션을 선택한다.
 3. ZYNQ IP core 를 위의 문서와는 다르게, 다음 구성으로 세팅한다.
 ![Re-customize PS IP](./asset/img/PS-PL_config.png)
-4. 해당 창의 Clock configuration 에서, 주어진 clock port 의 clock 을 200MHz 로 세팅해준다. (이 프로젝트의 목표 clock) (TODO: 이미지 추가)
+4. 해당 창의 Clock configuration 에서, 주어진 clock port 의 clock 을 200MHz 로 세팅해준다. (이 프로젝트의 목표 clock) ![Clock](./asset/img/clocktree.png)
 4. 다음 [XDC 파일](https://github.com/Digilent/digilent-xdc/blob/master/Zybo-Z7-Master.xdc)을 내려받는다
 5. 해당 파일에서 다음 부분을 주석 해제한다:
 ```
