@@ -33,8 +33,8 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
       throw TimedOut
     } catch {
       case AllDone => {
-        fpu.clock.step()
-        fpu.clock.step()
+      //  fpu.clock.step()
+      //  fpu.clock.step()
       }
     }
   }
@@ -43,7 +43,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
         for (i <- 1 to 4) {
-          fpu.clock.step();
+          fpu.clock.step()
         }
         fpu.control.op.poke(FPUOperand.ADD)
         fpu.control.i_valid.poke(1.B)
@@ -51,7 +51,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.o_ready.poke(1.B)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
-        fpu.clock.step();
+        fpu.clock.step()
 
         fpuTestHelper(fpu, "h4380_0000".U)
       }
@@ -62,7 +62,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
         for (i <- 1 to 4) {
-          fpu.clock.step();
+          fpu.clock.step()
         }
         fpu.control.op.poke(FPUOperand.SUB)
         fpu.control.i_valid.poke(1.B)
@@ -70,7 +70,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.o_ready.poke(1.B)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
-        fpu.clock.step();
+        fpu.clock.step()
 
         fpuTestHelper(fpu, "h0000_0000".U)
       }
@@ -81,7 +81,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
         for (i <- 1 to 4) {
-          fpu.clock.step();
+          fpu.clock.step()
         }
         fpu.control.op.poke(FPUOperand.MUL)
         fpu.control.i_valid.poke(1.B)
@@ -89,7 +89,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.o_ready.poke(1.B)
         fpu.data.a.poke("h43000000".U)
         fpu.data.b.poke("h43000000".U)
-        fpu.clock.step();
+        fpu.clock.step()
 
         fpuTestHelper(fpu, "h4680_0000".U)
       }
@@ -100,7 +100,7 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
     test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
       fpu => {
         for (i <- 1 to 4) {
-          fpu.clock.step();
+          fpu.clock.step()
         }
         fpu.control.op.poke(FPUOperand.DIV)
         fpu.data.a.poke("h43000000".U)
@@ -108,9 +108,105 @@ class FPUTest extends AnyFreeSpec with ChiselScalatestTester with ParallelTestEx
         fpu.control.i_valid.poke(1.B)
         fpu.control.o_ready.poke(1.B)
         fpu.control.i_ready.expect(1.B)
-        fpu.clock.step();
+        fpu.clock.step()
 
         fpuTestHelper(fpu, "h3f80_0000".U)
+      }
+    }
+  }
+
+  "FPU sanity test: addition 02" in {
+    test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
+      fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step()
+        }
+        fpu.control.op.poke(FPUOperand.ADD)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.data.a.poke("h43000000".U)
+        fpu.data.b.poke("h43000000".U)
+        fpu.clock.step()
+
+        fpuTestHelper(fpu, "h4380_0000".U)
+
+        fpu.clock.step()
+        fpu.control.op.poke(FPUOperand.ADD)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.data.a.poke("h3f000000".U)
+        fpu.data.b.poke("h3f000000".U)
+        fpu.clock.step()
+
+        fpuTestHelper(fpu, "h3f800000".U)
+
+        fpu.clock.step()
+      }
+    }
+  }
+
+  "FPU sanity test: division 02" in {
+    test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
+      fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step()
+        }
+        fpu.control.op.poke(FPUOperand.DIV)
+        fpu.data.a.poke("h43000000".U)
+        fpu.data.b.poke("h43000000".U)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+        fpu.clock.step()
+
+        fpuTestHelper(fpu, "h3f80_0000".U)
+
+        fpu.clock.step()
+        fpu.control.op.poke(FPUOperand.DIV)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.data.a.poke("h42280000".U)
+        fpu.data.b.poke("h40e00000".U)
+        fpu.clock.step()
+
+        fpuTestHelper(fpu, "h40c00000".U)
+
+        fpu.clock.step()
+      }
+    }
+  }
+
+  "FPU sanity test: add div 01" in {
+    test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
+      fpu => {
+        for (i <- 1 to 4) {
+          fpu.clock.step()
+        }
+        fpu.control.op.poke(FPUOperand.ADD)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.data.a.poke("h43000000".U)
+        fpu.data.b.poke("h43000000".U)
+        fpu.clock.step()
+
+        fpuTestHelper(fpu, "h4380_0000".U)
+
+        fpu.clock.step()
+        fpu.control.op.poke(FPUOperand.DIV)
+        fpu.control.i_valid.poke(1.B)
+        fpu.control.i_ready.expect(1.B)
+        fpu.control.o_ready.poke(1.B)
+        fpu.data.a.poke("h42280000".U)
+        fpu.data.b.poke("h40e00000".U)
+        fpu.clock.step()
+
+        fpuTestHelper(fpu, "h40c00000".U)
+
+        fpu.clock.step()
       }
     }
   }
