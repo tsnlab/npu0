@@ -93,9 +93,7 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
       clkcnt := 0.U
       i_ready_reg := 1.B
       when (control.i_valid && control.i_ready) {
-        when (control.op =/= FPUOperand.DIV) {
-          o_valid_reg := 0.B
-        } otherwise {
+        when (control.op === FPUOperand.DIV) {
           div_in_valid := 1.B
         }
         current_op := control.op
@@ -110,7 +108,6 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
       when (current_op =/= FPUOperand.DIV) {
         when (clkcnt >= clkdelay.U) {
           o_valid_reg := 1.B
-          i_ready_reg := 1.B
           reg_y := MuxLookup(current_op, DontCare, Array(
             FPUOperand.ADD -> fadd.io.result,
             FPUOperand.SUB -> fadd.io.result,
@@ -126,6 +123,10 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
       }
 
       when (control.o_valid && control.o_ready) {
+        when (current_op =/= FPUOperand.DIV) {
+          i_ready_reg := 1.B
+          o_valid_reg := 0.B
+        }
         state := FPUState.READY
       }
     }
