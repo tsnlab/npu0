@@ -63,9 +63,11 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
   val state = RegInit(FPUState.READY)
   val clkcnt = RegInit(0.U(BitUtil.getBitWidth(16).W))
 
+  val div_in_valid = RegInit(0.B)
+
   // Wire control signal to fdiv value
   fdiv.io.specialIO.in_valid := MuxLookup(current_op, 0.B, Array(
-    FPUOperand.DIV -> 1.B //control.i_valid
+    FPUOperand.DIV -> div_in_valid
   ))
   fdiv.io.specialIO.out_ready := MuxLookup(current_op, 0.B, Array(
     FPUOperand.DIV -> control.o_ready
@@ -93,6 +95,8 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
       when (control.i_valid && control.i_ready) {
         when (control.op =/= FPUOperand.DIV) {
           o_valid_reg := 0.B
+        } otherwise {
+          div_in_valid := 1.B
         }
         current_op := control.op
         reg_a := data.a
@@ -117,6 +121,8 @@ class FPU(exponent: Int, mantissa: Int) extends Module {
           clkcnt := clkcnt + 1.U
           i_ready_reg := 0.B
         }
+      } otherwise {
+        div_in_valid := 0.B
       }
 
       when (control.o_valid && control.o_ready) {
