@@ -47,7 +47,10 @@ set_property -dict { PACKAGE_PIN Y12   IOSTANDARD LVCMOS33 } [get_ports { led5_b
 9. 다음 그림과 같이, Block diagram 을 만든다
 ![Blockdiagram](./asset/img/blockdiagram.png)
 해당 그림에서 NOT 게이트는 Diagram 탭 안 Right click > Add IP > Utility Vector Logic 검색 후 추가한 뒤, 생성된 블럭 더블클릭하여 Vector size 1 짜리 NOT 게이트로 설정하여 연결한다.
-10. 이후 위의 Notion 문서에 언급된 대로 보드 내보내기를 하여, 추가 과정을 진행한다. 이 때, Include Bitstream 을 하여 보드를 내보내면, Vitis 에서 한 번에 프로그램할 수 있지만, 추후 [Xilinx ILA](https://www.xilinx.com/products/intellectual-property/ila.html) 와 같은 도구를 사용해 디버깅을 해야 할 경우, Vivado 에서 별도로 비트스트림을 프로그램해야 해당 기능을 사용할 수 있다.
+10. Address Editor 는 다음과 같이 설정한다. (설정 안 해도 동작하지만, 설정해 주는 것을 권장함)
+![address_editor](./asset/img/address_editor.png)
+![address_map](./asset/img/address_map.png)
+11. 이후 위의 Notion 문서에 언급된 대로 보드 내보내기를 하여, 추가 과정을 진행한다. 이 때, Include Bitstream 을 하여 보드를 내보내면, Vitis 에서 한 번에 프로그램할 수 있지만, 추후 [Xilinx ILA](https://www.xilinx.com/products/intellectual-property/ila.html) 와 같은 도구를 사용해 디버깅을 해야 할 경우, Vivado 에서 별도로 비트스트림을 프로그램해야 해당 기능을 사용할 수 있다.
 
 
 ## Register map
