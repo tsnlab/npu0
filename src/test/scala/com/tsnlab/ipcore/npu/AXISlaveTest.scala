@@ -62,14 +62,14 @@ class AXISlaveTest extends AnyFreeSpec with ChiselScalatestTester with ParallelT
 
               case RREADY => {
                 println("Stage RREADY")
-                axislave.S_AXI.rready.poke(true.B)
+                axislave.S_AXI.rready.poke(false.B)
                 busmaterState = RVALID
               }
 
               case RVALID => {
                 println("State RVALID")
                 if (axislave.S_AXI.rvalid.peek().litValue == 1) {
-                  axislave.S_AXI.rready.poke(false.B)
+                  axislave.S_AXI.rready.poke(true.B)
                   axislave.S_AXI.rid.expect(42.U)
 
                   if (axislave.S_AXI.rlast.peek().litValue == 1) {

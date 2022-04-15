@@ -79,6 +79,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       // Wait for ARVLID signal form master and
       // Set ARREADY
       axi_rvalid := 0.B
+      axi_rlast := 0.B
 
       when (S_AXI.arvalid && S_AXI.arready) {
         // Extract required information from the bus
@@ -102,8 +103,6 @@ class S_AXI(axi4param: AXI4Param) extends Module {
       
       when (axi_rlen === 0.U) {
         axi_rlast := 1.B
-      } otherwise {
-        axi_rlast := 0.B
       }
 
       axiReadState := AXI4ReadState.RVALID
@@ -118,7 +117,7 @@ class S_AXI(axi4param: AXI4Param) extends Module {
           axi_rlen := axi_rlen - 1.U
           // TODO: Implement 64-bit operation switch
           regmem_r_addr := regmem_r_addr + 4.U // TODO: FIXME
-          axiReadState := AXI4ReadState.RVALID
+          axiReadState := AXI4ReadState.ARREADY
         }
       }
     }
