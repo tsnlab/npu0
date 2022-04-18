@@ -9,6 +9,8 @@ import org.scalatest.ParallelTestExecution
 import com.tsnlab.ipcore.npu.FPU
 import com.tsnlab.ipcore.npu.util.FPUOperand
 
+import java.util.Random
+
 object AllDone extends Exception { }
 object TimedOut extends Exception { }
 

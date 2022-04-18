@@ -216,7 +216,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
   switch (axiWriteState) {
     is (AXI4WriteState.NOOP) {
       axi_awvalid := 0.B
-      memport_w_ready := 0.B
+      memport_w_ready := 1.B
       axi_wlast := 0.B
       when (memport_w.enable) {
         memport_w_addr := memport_w.addr
@@ -292,7 +292,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
 
     is (AXI4WriteState.BVALID) {
       when (M_AXI.bvalid && M_AXI.bready) {
-        axiWriteState := AXI4WriteState.BREADY
+        axiWriteState := AXI4WriteState.NOOP
       }
     }
 

@@ -17,8 +17,15 @@ object FPUProcessState extends ChiselEnum {
   val FETCH01D = Value
   val FETCH02A = Value
   val FETCH02D = Value
-  val PROCESS  = Value
+  val PROCESS01= Value
+  val PROCESS02= Value
   val DONE     = Value
+}
+
+object FPUWriteState extends ChiselEnum {
+  val READY = Value
+  val WRITE = Value
+  val DONE  = Value
 }
 
 class FPUWrapper(
@@ -119,6 +126,7 @@ class FPUWrapper(
   //val fpu = Module(new FPU(exponent, mantissa))
 
   val fpuState = RegInit(FPUProcessState.READY)
+  val fpuWriteState = RegInit(FPUWriteState.READY)
   
   val fpu_data_a = RegInit(0.U(32.W))
   val fpu_data_b = RegInit(0.U(32.W))
@@ -129,9 +137,10 @@ class FPUWrapper(
   
   // Register def
   val fpu_i_valid = RegInit(0.B)
+  val fpu_o_ready = RegInit(0.B)
 
   fpu.control.i_valid := fpu_i_valid
-  fpu.control.o_ready := 1.B
+  fpu.control.o_ready := fpu_o_ready
 
   debug.led := fpuState.asUInt()
   debug.busy := regvec(0)(1)
@@ -171,26 +180,66 @@ class FPUWrapper(
       when (m_axi.memport_r.ready) {
         fpu_data_b := m_axi.memport_r.data
         fpu_i_valid := 1.B
-        fpuState := FPUProcessState.PROCESS
+        fpuState := FPUProcessState.PROCESS01
       }
     }
 
-    is (FPUProcessState.PROCESS) {
+    is (FPUProcessState.PROCESS01) {
       // wait the signal
-      when (fpu.control.o_valid) {
-        fpuState := FPUProcessState.DONE
+      when (!fpu.control.i_ready) {
         fpu_i_valid := 0.B
-        memport_w_addr := dstaddrwire
-        memport_w_data := fpu.data.y
-        memport_w_enable := 1.B
+        fpuState := FPUProcessState.DONE
       }
     }
 
     is (FPUProcessState.DONE) {
-      when (m_axi.memport_w.ready) {
-        regvec(0) := Cat(regvec(0)(31,2), 0.B, 0.B)
-        memport_w_enable := 0.B
+      when (!regvec(0)(0)) {
         fpuState := FPUProcessState.READY
+      }
+    }
+
+    //is (FPUProcessState.PROCESS02) {
+    //  when (fpu.control.o_valid) {
+    //    fpuState := FPUProcessState.DONE
+    //    memport_w_addr := dstaddrwire
+    //    memport_w_data := fpu.data.y
+    //    memport_w_enable := 1.B
+    //  }
+    //}
+
+    //is (FPUProcessState.DONE) {
+    //  when (m_axi.memport_w.ready) {
+    //    regvec(0) := Cat(regvec(0)(31,2), 0.B, 0.B)
+    //    memport_w_enable := 0.B
+    //    fpuState := FPUProcessState.READY
+    //  }
+    //}
+  }
+
+  switch (fpuWriteState) {
+    is (FPUWriteState.READY) {
+      memport_w_enable := 0.B
+      when (m_axi.memport_w.ready) {
+        fpu_o_ready := 1.B
+        fpuWriteState := FPUWriteState.WRITE
+      }
+    }
+
+    is (FPUWriteState.WRITE) {
+      when (fpu.control.o_valid) {
+        memport_w_addr := dstaddrwire
+        memport_w_data := fpu.data.y
+        memport_w_enable := 1.B
+        fpu_o_ready := 0.B
+        fpuWriteState := FPUWriteState.DONE
+      }
+    }
+
+    is (FPUWriteState.DONE) {
+      memport_w_enable := 0.B
+      regvec(0) := Cat(regvec(0)(31,2), 0.B, 0.B)
+      when (fpu.control.i_ready) {
+        fpuWriteState := FPUWriteState.READY
       }
     }
   }
