@@ -32,6 +32,12 @@ lazy val root = (project in file("."))
       "org.easysoc" %% "layered-firrtl" % "1.1-SNAPSHOT",
     ),
   )).dependsOn(hardfloat_fudian)
+  .dependsOn(asyncq)
 
 lazy val hardfloat_fudian = (project in file("fudian"))
   .settings(commonSettings)
+
+//lazy val asyncq = (project in file ("asyncqueue-lite"))
+//  .settings(commonSettings)
+
+lazy val asyncq = RootProject(file("asyncqueue-lite"))
