@@ -68,4 +68,33 @@ class FPUMulticycleTest extends AnyFreeSpec with ChiselScalatestTester with Para
     }
   }
 
+  "FPU multicycle test: division" in {
+    test(new FPU(exponent, mantissa)).withAnnotations(Seq(WriteVcdAnnotation)) {
+      fpu => {
+        val random = new Random();
+
+        for (tcase <- 1 to 4) {
+          var a = random.nextInt();
+          var b = random.nextInt();
+
+          if (a < 0) a = -a
+          if (b < 0) b = -b
+          for (i <- 1 to 4) {
+            fpu.clock.step()
+          }
+          fpu.control.op.poke(FPUOperand.DIV)
+          fpu.control.i_valid.poke(1.B)
+          fpu.control.i_ready.expect(1.B)
+          fpu.control.o_ready.poke(1.B)
+          fpu.data.a.poke(a.U)
+          fpu.data.b.poke(b.U)
+          fpu.clock.step()
+
+          fpuTestHelper(fpu, "h4380_0000".U)
+
+          fpu.clock.step()
+        }
+      }
+    }
+  }
 }
