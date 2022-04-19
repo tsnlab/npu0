@@ -108,6 +108,7 @@ class AsyncFPU(exponent: Int, mantissa: Int) extends Module {
         when (fdiv.io.specialIO.out_valid) {
           data.a.ready := 1.B
           data.b.ready := 1.B
+          data.y.valid := 1.B
           state := FPUState.READY
         }
       }
