@@ -3,5 +3,5 @@
 	url = https://github.com/OpenXiangShan/fudian.git
 [submodule "asyncqueue-lite"]
 	path = asyncqueue-lite
-	url = git@github.com:tsnlab/asyncqueue.git
-	#url = https://github.com/tsnlab/asyncqueue.git
+	#url = git@github.com:tsnlab/asyncqueue.git
+	url = https://github.com/tsnlab/asyncqueue.git
