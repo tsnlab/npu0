@@ -32,13 +32,17 @@ case class AXI4Param (
   userWidth: AXIUserConfig,
   busvariant: AXIVariant,
 ) {
-  def getBurstWidth(): Width = {
+  def getBurstWidthAsInt(): Width = {
     this.busvariant match {
-      case AXIVariant.AXI3 => 4.W
-      case AXIVariant.AXI3_LITE => 4.W
-      case AXIVariant.AXI4 => 8.W
-      case AXIVariant.AXI4_LITE => 8.W
+      case AXIVariant.AXI3 => 4
+      case AXIVariant.AXI3_LITE => 4
+      case AXIVariant.AXI4 => 8
+      case AXIVariant.AXI4_LITE => 8
     }
+  }
+
+  def getBurstWidth(): Width = {
+    this.getBurstWidthAsInt().W
   }
   
   def getStrbWidth(): Width = {
