@@ -66,7 +66,7 @@ set_property -dict { PACKAGE_PIN Y12   IOSTANDARD LVCMOS33 } [get_ports { led5_b
 | 2-7   | Reserved                            |
 | 8-9   | Opcode. 0: Add 1: Sub 2: Mul 3: Div |
 | 10-15 | Reserved                            |
-| 16-31 | Reserved                            |
+| 16-31 | Burst size (n-1)                    |
 
 #### Data register
 
