@@ -15,12 +15,11 @@ import freechips.asyncqueue.{AsyncQueue, AsyncQueueParams}
 
 object FPUProcessState extends ChiselEnum {
   val READY    = Value
+  val PREPARE  = Value
   val FETCH01A = Value
   val FETCH01D = Value
   val FETCH02A = Value
   val FETCH02D = Value
-  val PROCESS01= Value
-  val PROCESS02= Value
   val DONE     = Value
 }
 
@@ -100,25 +99,17 @@ class FPUWrapper(
 
   val flagwire     = Wire(Bits(8.W))
   val opcodewire   = Wire(UInt(8.W))
+  val burstlenwire = Wire(UInt(16.W))
   val src1addrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
   val src2addrwire = Wire(UInt(axi4SlaveParam.dataWidth.W))
   val dstaddrwire  = Wire(UInt(axi4SlaveParam.dataWidth.W))
 
   flagwire     := regvec(0)(7,0)
   opcodewire   := regvec(0)(15,8)
+  burstlenwire := regvec(0)(31,16)
   src1addrwire := regvec(1)
   src2addrwire := regvec(2)
   dstaddrwire  := regvec(3)
-
-  //// Hook up S_AXI to our tiny, cute memory
-  //when (s_axi.REGMEM.we) {
-  //  val addrwire = Wire(UInt(4.W)) // TODO: Un-hardcode me.
-  //  addrwire := s_axi.MEMIO.addr(6, 2) // Cut last 2 bit.
-  //  mmioreg.write(addrwire, s_axi.MEMIO.data)
-  //}
-
-  // Some awesome state machine to handle the fault
-  // Read DRAM from bus master 
 
   // clocktree module
   val clktree = Module(new ClockTree())
@@ -158,30 +149,17 @@ class FPUWrapper(
   queue_b.io.enq.valid := 0.B
   queue_y.io.deq.ready := 1.B
 
-  // Temporal
-  //queue_a.io.deq.ready := 0.B
-  //queue_b.io.deq.ready := 0.B
-  //queue_y.io.enq.valid := 0.B
-  //queue_y.io.enq.bits := 0.U
-
   asyncFpu.data.a <> queue_a.io.deq
   asyncFpu.data.b <> queue_b.io.deq
   queue_y.io.enq <> asyncFpu.data.y
 
+  // TODO: Make it queueable
+  asyncFpu.control.op := opcodewire(1,0)
+
   val fpuState = RegInit(FPUProcessState.READY)
   val fpuWriteState = RegInit(FPUWriteState.READY)
-  
-  val fpu_data_a = RegInit(0.U(32.W))
-  val fpu_data_b = RegInit(0.U(32.W))
-
-  //fpu.data.a := queue_a.io.deq.bits
-  //fpu.data.b := queue_b.io.deq.bits
-  //fpu.control.op := opcodewire(1,0)
-  asyncFpu.control.op := opcodewire(1,0)
-  
-  // Register def
-  val fpu_i_valid = RegInit(0.B)
-  val fpu_o_ready = RegInit(0.B)
+  val burstlen = RegInit(UInt(16.W))
+  val chunklen = RegInit(UInt(axi4MasterParam.getBurstWidth()))
 
   debug.led := fpuState.asUInt()
   debug.busy := regvec(0)(1)
@@ -190,7 +168,21 @@ class FPUWrapper(
     is (FPUProcessState.READY) {
       when (flagwire(0) === 1.B) {
         regvec(0) := Cat(regvec(0)(31,2), 1.B, regvec(0)(0))
+        burstlen := burstlenwire
+        fpuState := FPUProcessState.PREPARE
         when (queue_a.io.enq.ready && queue_b.io.enq.ready) {
+          fpuState := FPUProcessState.FETCH01A
+        }
+      }
+    }
+
+    is (FPUProcessState.PREPARE) {
+      when (burstlen =/= 0.U) {
+        when (queue_a.io.enq.ready && queue_b.io.enq.ready) {
+          chunklen := burstlen(axi4MasterParam.getBurstWidthAsInt() - 1, 0)
+          when (burstlen(axi4MasterParam.getBurstWidthAsInt()) =/= 0.U {
+            burstlen := burstlen - burstlen(axi4MasterParam.getBurstWidthAsInt() - 1, 0) - 1.U
+          }
           fpuState := FPUProcessState.FETCH01A
         }
       }
@@ -224,7 +216,12 @@ class FPUWrapper(
       memport_r_enable := 0.B
       when (m_axi.memport_r.ready) {
         queue_b.io.enq.valid := 1.B
-        fpuState := FPUProcessState.DONE
+        when (chunklen === 0.U) {
+          fpuState := FPUProcessState.DONE
+        } otherwise {
+          chunklen := chunklen - 1.U
+          fpuState := FPUProcessState.PREPARE
+        }
       }
     }
 
