@@ -65,6 +65,10 @@ class FPUWrapper(
   m_axi.memport_w.data := memport_w_data
   m_axi.memport_w.enable := memport_w_enable
   m_axi.memport_w.cache := "b0010".U
+  
+  // TODO: Temporal value, fixme
+  m_axi.memport_w.burstlen := 0.U
+  m_axi.memport_r.burstlen := 0.U
 
   m_axi.axiuser.ar match {
     case ar: UInt => ar := "b00001".U

@@ -102,6 +102,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     val cache = Input(UInt(4.W))
     val enable = Input(Bool())
     val ready = Output(Bool())
+    val burstlen = Input(UInt(axi4param.getBurstWidth()))
   })
 
   val memport_r_data = RegInit(0.U(axi4param.dataWidth.W))
@@ -116,6 +117,7 @@ class M_AXI(axi4param: AXI4Param) extends Module {
     val cache = Input(UInt(4.W))
     val enable = Input(Bool())
     val ready = Output(Bool())
+    val burstlen = Input(UInt(axi4param.getBurstWidth()))
   })
 
   val memport_w_addr = RegInit(0.U(axi4param.addrWidth.W))
@@ -168,7 +170,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       //axi_arsize := "h2".U // 32-bit
       axi_arsize := "h3".U // 64-bit
       axi_arprot := "b001".U
-      axi_arlen := 0.U // Single beat
+      //axi_arlen := 0.U // Single beat
+      axi_arlen := memport_r.burstlen
       axi_araddr := memport_r.addr
       axi_arcache := memport_r.cache
       axi_arid := rid.U
@@ -235,7 +238,8 @@ class M_AXI(axi4param: AXI4Param) extends Module {
       axi_awaddr := memport_w_addr
       axi_awcache := memport_w.cache
       axi_awid := wid.U
-      axi_awlen := 0.U
+      //axi_awlen := 0.U
+      axi_awlen := memport_w.burstlen
       axi_awprot := "b001".U
       axi_awburst := 1.U // INCR
 
