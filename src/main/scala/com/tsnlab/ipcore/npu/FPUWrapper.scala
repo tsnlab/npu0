@@ -158,8 +158,8 @@ class FPUWrapper(
 
   val fpuState = RegInit(FPUProcessState.READY)
   val fpuWriteState = RegInit(FPUWriteState.READY)
-  val burstlen = RegInit(UInt(16.W))
-  val chunklen = RegInit(UInt(axi4MasterParam.getBurstWidth()))
+  val burstlen = RegInit(0.U(16.W))
+  val chunklen = RegInit(0.U(axi4MasterParam.getBurstWidth()))
 
   debug.led := fpuState.asUInt()
   debug.busy := regvec(0)(1)
@@ -180,7 +180,7 @@ class FPUWrapper(
       when (burstlen =/= 0.U) {
         when (queue_a.io.enq.ready && queue_b.io.enq.ready) {
           chunklen := burstlen(axi4MasterParam.getBurstWidthAsInt() - 1, 0)
-          when (burstlen(axi4MasterParam.getBurstWidthAsInt()) =/= 0.U {
+          when (burstlen(axi4MasterParam.getBurstWidthAsInt()) =/= 0.U) {
             burstlen := burstlen - burstlen(axi4MasterParam.getBurstWidthAsInt() - 1, 0) - 1.U
           }
           fpuState := FPUProcessState.FETCH01A
